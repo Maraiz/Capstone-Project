@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selamat Datang</title>
+    <title>Selamat Datang - Step 4</title>
     <style>
         * {
             margin: 0;
@@ -38,8 +38,12 @@
         .question {
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             line-height: 1.3;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
         }
 
         .input-label {
@@ -65,6 +69,56 @@
             border-color: #007AFF;
         }
 
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-top: 30px;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            margin-top: 2px;
+        }
+
+        .checkbox.checked {
+            background-color: #007AFF;
+            border-color: #007AFF;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-text {
+            font-size: 1rem;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .checkbox-text a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+
+        .checkbox-text a:hover {
+            text-decoration: underline;
+        }
+
         .button-container {
             display: flex;
             gap: 20px;
@@ -79,7 +133,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-width: 80px;
         }
 
         .btn-back {
@@ -126,6 +179,14 @@
             .container {
                 padding: 0 10px;
             }
+
+            .checkbox-container {
+                gap: 12px;
+            }
+
+            .checkbox-text {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -134,10 +195,24 @@
         <h1 class="title">Selamat Datang</h1>
         
         <div class="form-section">
-            <h2 class="question">Pertama-tama, siapa nama panggilanmu?</h2>
+            <h2 class="question">Hampir selesai, Sekarang buat akun anda!</h2>
             
-            <label class="input-label">Masukkan Namamu Disini</label>
-            <input type="text" class="input-field" placeholder="">
+            <div class="input-group">
+                <label class="input-label">Alamat Email</label>
+                <input type="email" class="input-field" placeholder="">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Kata Sandi</label>
+                <input type="password" class="input-field" placeholder="">
+            </div>
+
+            <div class="checkbox-container" onclick="toggleCheckbox()">
+                <div class="checkbox" id="termsCheckbox"></div>
+                <div class="checkbox-text">
+                    Saya menyetujui <a href="#" onclick="event.stopPropagation()">Syarat dan ketentuan</a> dan <a href="#" onclick="event.stopPropagation()">kebijakan Privasi</a> FittCall
+                </div>
+            </div>
         </div>
         
         <div class="button-container">
@@ -147,5 +222,12 @@
             <button class="btn btn-next">Berikutnya</button>
         </div>
     </div>
+
+    <script>
+        function toggleCheckbox() {
+            const checkbox = document.getElementById('termsCheckbox');
+            checkbox.classList.toggle('checked');
+        }
+    </script>
 </body>
 </html>
