@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitCall - Reach Your Limits</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+    height: 100vh;
+    color: white;
+    overflow: hidden;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Header Styles */
+.header {
+    padding: 30px 50px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #f39c12;
+}
+
+.logo i {
+    margin-right: 10px;
+    font-size: 28px;
+}
+
+/* Hero Section */
+.hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 0 50px;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    z-index: 5;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.highlight {
+    color: #f39c12;
+}
+
+.hero-description {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.9;
+}
+
+/* CTA Buttons */
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 50px;
+}
+
+.btn {
+    padding: 15px 35px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.btn-secondary:hover {
+    background-color: white;
+    color: #333;
+    transform: translateY(-2px);
+}
+
+/* Navigation */
+.navigation {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.slide-indicators {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.slide-number {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.progress-bar {
+    width: 100px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 33%;
+    height: 100%;
+    background: #f39c12;
+    border-radius: 2px;
+}
+
+/* Social Media */
+.social-media {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.social-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #f39c12;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+}
+
+.social-icon {
+    color: white;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    color: #f39c12;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-description {
+        font-size: 14px;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 200px;
+    }
+    
+    .navigation,
+    .social-media {
+        position: static;
+        margin-top: 30px;
+        justify-content: center;
+    }
+    
+    .hero {
+        flex-direction: column;
+        padding: 100px 20px 20px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .navigation {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .social-media {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header dengan Logo -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-dumbbell"></i>
+                <span>FitCall</span>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <main class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    REACH YOUR LIMITS<br>
+                    AND GET TO THE<br>
+                    <span class="highlight">NEXT LEVEL</span>
+                </h1>
+                
+                <p class="hero-description">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut 
+                    labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco 
+                    laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-secondary">Masuk</button>
+                    <button class="btn btn-primary">Daftar Gratis</button>
+                </div>
+            </div>
+
+            <!-- Navigation Dots -->
+            <div class="navigation">
+                <button class="nav-btn prev">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="nav-btn next">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="slide-indicators">
+                    <span class="slide-number">01</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span class="slide-number">03</span>
+                </div>
+            </div>
+
+            <!-- Social Media -->
+            <div class="social-media">
+                <span class="social-label">SOCIAL</span>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

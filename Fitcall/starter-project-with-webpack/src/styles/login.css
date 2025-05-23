@@ -1,0 +1,232 @@
+/* Login Page Styles */
+.login-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 80px;
+  line-height: 1.2;
+}
+
+.form-section {
+  margin-bottom: 60px;
+}
+
+.question {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.button-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 40px;
+  align-items: center;
+}
+
+.arrow-left {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Login specific button styles - CLEANED */
+.login-container .btn-back {
+  background-color: #007AFF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 50px;
+  border-radius: 25px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.login-container .btn-back:hover {
+  background-color: #0056b3;
+}
+
+.login-container .btn-primary {
+  flex: 1;
+  max-width: 200px;
+  min-width: 120px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  white-space: nowrap;
+}
+
+.login-container .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading state - ONLY ONE SPINNER */
+.login-container .btn-primary.loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.login-container .btn-primary.loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: loginSpinner 1s linear infinite;
+  z-index: 1;
+}
+
+@keyframes loginSpinner {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Form validation states */
+.login-container .input-field.valid {
+  border-color: #28a745;
+}
+
+.login-container .input-field.invalid {
+  border-color: #dc3545;
+}
+
+.login-container .checkbox.checked {
+  background-color: #007AFF;
+  border-color: #007AFF;
+}
+
+.login-container .checkbox.checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Focus states */
+.login-container .input-field:focus {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.login-container .checkbox-container:focus-within .checkbox {
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Hover states */
+.login-container .checkbox-container:hover .checkbox {
+  border-color: #007AFF;
+}
+
+.login-container .checkbox-text a:hover {
+  color: #0056b3;
+}
+
+/* Animation for form elements */
+.login-container .input-field,
+.login-container .checkbox,
+.login-container .btn {
+  transition: background-color 0.3s ease, opacity 0.3s ease, border-color 0.3s ease;
+}
+
+/* Error state for form */
+.login-container .form-error {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  display: none;
+}
+
+.login-container .input-group.error .form-error {
+  display: block;
+}
+
+.login-container .input-group.error .input-field {
+  border-color: #dc3545;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 60px;
+  }
+  
+  .question {
+    font-size: 1.3rem;
+  }
+  
+  .login-container {
+    padding: 20px 10px;
+  }
+
+  .button-container {
+    gap: 15px;
+  }
+
+  .login-container .btn-primary {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2rem;
+    margin-bottom: 40px;
+  }
+  
+  .question {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+  
+  .login-container {
+    padding: 15px 10px;
+  }
+
+  .form-section {
+    margin-bottom: 40px;
+  }
+
+  .button-container {
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .login-container .btn-primary {
+    max-width: 160px;
+    font-size: 0.9rem;
+  }
+
+  .login-container .btn-back {
+    width: 50px;
+    height: 45px;
+  }
+
+  .arrow-left {
+    font-size: 1rem;
+  }
+}
