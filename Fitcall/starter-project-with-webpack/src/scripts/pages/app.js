@@ -112,8 +112,13 @@ class App {
       // Hide main header for landing page
       if (header) header.style.display = 'none';
       if (mainContent) mainContent.style.minHeight = '100vh';
+    } else if (url === '/home') { // Tambahan untuk home page
+      body.classList.add('home-page');
+      // Hide main header for home page
+      if (header) header.style.display = 'none';
+      if (mainContent) mainContent.style.minHeight = '100vh';
     } else {
-      // Show main header for other pages
+      // Show main header for other pages (login, register, dll)
       if (header) header.style.display = 'block';
       if (mainContent) mainContent.style.minHeight = 'calc(100vh - 70px)';
       
@@ -121,8 +126,6 @@ class App {
         body.classList.add('login-page');
       } else if (url === '/register') {
         body.classList.add('register-page');
-      } else {
-        body.classList.add('home-page');
       }
     }
   }

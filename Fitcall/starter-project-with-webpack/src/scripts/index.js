@@ -6,6 +6,7 @@ import '../styles/components.css';
 import '../styles/login.css'; // Tambahkan import login.css
 import '../styles/register.css'; // Tambahkan ini
 import '../styles/landing.css'; 
+import '../styles/home.css';
 
 import App from './pages/app';
 
