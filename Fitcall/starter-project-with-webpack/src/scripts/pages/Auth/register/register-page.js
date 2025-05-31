@@ -1,18 +1,21 @@
 export default class RegisterPage {
-  constructor() {
-    this.app = null;
-    this.currentStep = 1;
-    this.maxStep = 2; // Will be increased when step 3 is added
-    this.registrationData = {
-      name: '',
-      country: '',
-      gender: '',
-      age: ''
-    };
-    
-    // Get step from URL hash if available
-    this.initializeStep();
-  }
+constructor() {
+  this.app = null;
+  this.currentStep = 1;
+  this.maxStep = 3; // Updated from 2 to 3
+  this.registrationData = {
+    name: '',
+    country: '',
+    gender: '',
+    age: '',
+    // Step 3 data
+    targetWeight: '',
+    height: '',
+    currentWeight: ''
+  };
+  
+  this.initializeStep();
+}
 
   initializeStep() {
     const hash = window.location.hash;
@@ -25,16 +28,18 @@ export default class RegisterPage {
     }
   }
 
-  async render() {
-    switch(this.currentStep) {
-      case 1:
-        return this.renderStep1();
-      case 2:
-        return this.renderStep2();
-      default:
-        return this.renderStep1();
-    }
+async render() {
+  switch(this.currentStep) {
+    case 1:
+      return this.renderStep1();
+    case 2:
+      return this.renderStep2();
+    case 3:
+      return this.renderStep3();
+    default:
+      return this.renderStep1();
   }
+}
 
   renderStep1() {
     return `
@@ -121,17 +126,71 @@ export default class RegisterPage {
     `;
   }
 
-  async afterRender() {
-    switch(this.currentStep) {
-      case 1:
-        this.initializeStep1();
-        break;
-      case 2:
-        this.initializeStep2();
-        break;
-    }
-    this.loadSavedData();
+  renderStep3() {
+  return `
+    <div class="container register-container register-step3">
+      <h1 class="title">Selamat Datang</h1>
+      
+      <div class="content">
+        <div class="left-section">
+          <h2 class="section-title">Beri tahu kami sedikit tentang diri Anda</h2>
+          
+          <div class="input-group">
+            <label class="input-label">Berapa sasaran berat badanmu?</label>
+            <div class="input-with-unit">
+              <input type="number" class="input-field" id="targetWeightInput" placeholder="Masukkan berat target" min="30" max="200" step="0.1">
+              <div class="unit-label">kg</div>
+            </div>
+            <p class="input-description">(Opsional) Ini tidak mempengaruhi sasaran kalori harianmu dan dapat diubah nanti atau jangan di isi</p>
+            <div class="form-error">Target berat badan harus antara 30-200 kg</div>
+          </div>
+        </div>
+        
+        <div class="right-section">
+          <div class="input-group">
+            <label class="input-label">Berapa Tinggi Badanmu?</label>
+            <div class="input-with-unit">
+              <input type="number" class="input-field" id="heightInput" placeholder="Masukkan tinggi badan" min="100" max="250">
+              <div class="unit-label">cm</div>
+            </div>
+            <div class="form-error">Tinggi badan harus antara 100-250 cm</div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Berapa Berat Badanmu?</label>
+            <div class="input-with-unit">
+              <input type="number" class="input-field" id="currentWeightInput" placeholder="Masukkan berat badan" min="30" max="300" step="0.1">
+              <div class="unit-label">kg</div>
+            </div>
+            <div class="form-error">Berat badan harus antara 30-300 kg</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-container">
+        <button class="btn btn-back" id="backBtn">
+          <span class="arrow-left">←</span>
+        </button>
+        <button class="btn btn-primary" id="nextBtn" disabled>Selesai</button>
+      </div>
+    </div>
+  `;
+}
+
+async afterRender() {
+  switch(this.currentStep) {
+    case 1:
+      this.initializeStep1();
+      break;
+    case 2:
+      this.initializeStep2();
+      break;
+    case 3:
+      this.initializeStep3();
+      break;
   }
+  this.loadSavedData();
+}
 
   // STEP 1 METHODS
   initializeStep1() {
@@ -393,21 +452,209 @@ handleStep2Back() {
   this.goToStep(1);
 }
 
-  handleStep2Next() {
-    if (!this.validateStep2()) {
-      this.showMessage('Mohon lengkapi semua data yang diperlukan', 'error');
-      return;
-    }
-
-    this.saveCurrentStepData();
-    this.showMessage('Data tersimpan! Melanjutkan ke step berikutnya...', 'success');
-    
-    setTimeout(() => {
-      // For now, redirect to login (will be changed to step 3 later)
-      window.location.hash = '/login';
-      console.log('Registration data:', this.getRegistrationData());
-    }, 1500);
+handleStep2Next() {
+  if (!this.validateStep2()) {
+    this.showMessage('Mohon lengkapi semua data yang diperlukan', 'error');
+    return;
   }
+
+  this.saveCurrentStepData();
+  this.showMessage('Data tersimpan! Melanjutkan ke step berikutnya...', 'success');
+  
+  setTimeout(() => {
+    this.goToStep(3); // Changed from redirect to login
+  }, 1000);
+}
+
+  // STEP 3 METHODS
+initializeStep3() {
+  // Back button
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      this.handleStep3Back();
+    });
+  }
+
+  // Next button
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      this.handleStep3Next();
+    });
+  }
+
+  // Target weight input (optional)
+  const targetWeightInput = document.getElementById('targetWeightInput');
+  if (targetWeightInput) {
+    targetWeightInput.addEventListener('input', () => {
+      this.validateTargetWeight();
+      this.validateStep3();
+    });
+
+    targetWeightInput.addEventListener('blur', () => {
+      this.validateTargetWeight();
+    });
+  }
+
+  // Height input (required)
+  const heightInput = document.getElementById('heightInput');
+  if (heightInput) {
+    heightInput.addEventListener('input', () => {
+      this.validateHeight();
+      this.validateStep3();
+    });
+
+    heightInput.addEventListener('blur', () => {
+      this.validateHeight();
+    });
+  }
+
+  // Current weight input (required)
+  const currentWeightInput = document.getElementById('currentWeightInput');
+  if (currentWeightInput) {
+    currentWeightInput.addEventListener('input', () => {
+      this.validateCurrentWeight();
+      this.validateStep3();
+    });
+
+    currentWeightInput.addEventListener('blur', () => {
+      this.validateCurrentWeight();
+    });
+
+    // Enter key support
+    currentWeightInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextBtn = document.getElementById('nextBtn');
+        if (!nextBtn.disabled) {
+          this.handleStep3Next();
+        }
+      }
+    });
+  }
+}
+
+validateTargetWeight() {
+  const targetWeightInput = document.getElementById('targetWeightInput');
+  const targetWeightGroup = targetWeightInput?.parentElement?.parentElement;
+  const targetWeight = parseFloat(targetWeightInput?.value) || 0;
+  
+  // Target weight is optional, so it's valid if empty or within range
+  const isEmpty = !targetWeightInput?.value || targetWeightInput?.value.trim() === '';
+  const isValidRange = targetWeight >= 30 && targetWeight <= 200;
+  const isValid = isEmpty || isValidRange;
+  
+  if (targetWeightGroup) {
+    if (!isEmpty && !isValid) {
+      targetWeightGroup.classList.add('error');
+      targetWeightInput.classList.add('invalid');
+      targetWeightInput.classList.remove('valid');
+    } else if (!isEmpty && isValid) {
+      targetWeightGroup.classList.remove('error');
+      targetWeightInput.classList.remove('invalid');
+      targetWeightInput.classList.add('valid');
+    } else {
+      targetWeightGroup.classList.remove('error');
+      targetWeightInput.classList.remove('invalid', 'valid');
+    }
+  }
+  
+  return isValid;
+}
+
+validateHeight() {
+  const heightInput = document.getElementById('heightInput');
+  const heightGroup = heightInput?.parentElement?.parentElement;
+  const height = parseInt(heightInput?.value) || 0;
+  
+  const isValidRange = height >= 100 && height <= 250;
+  const isValid = heightInput?.value && isValidRange;
+  
+  if (heightGroup) {
+    if (heightInput?.value && !isValid) {
+      heightGroup.classList.add('error');
+      heightInput.classList.add('invalid');
+      heightInput.classList.remove('valid');
+    } else if (heightInput?.value && isValid) {
+      heightGroup.classList.remove('error');
+      heightInput.classList.remove('invalid');
+      heightInput.classList.add('valid');
+    } else {
+      heightGroup.classList.remove('error');
+      heightInput.classList.remove('invalid', 'valid');
+    }
+  }
+  
+  return isValid;
+}
+
+validateCurrentWeight() {
+  const currentWeightInput = document.getElementById('currentWeightInput');
+  const currentWeightGroup = currentWeightInput?.parentElement?.parentElement;
+  const currentWeight = parseFloat(currentWeightInput?.value) || 0;
+  
+  const isValidRange = currentWeight >= 30 && currentWeight <= 300;
+  const isValid = currentWeightInput?.value && isValidRange;
+  
+  if (currentWeightGroup) {
+    if (currentWeightInput?.value && !isValid) {
+      currentWeightGroup.classList.add('error');
+      currentWeightInput.classList.add('invalid');
+      currentWeightInput.classList.remove('valid');
+    } else if (currentWeightInput?.value && isValid) {
+      currentWeightGroup.classList.remove('error');
+      currentWeightInput.classList.remove('invalid');
+      currentWeightInput.classList.add('valid');
+    } else {
+      currentWeightGroup.classList.remove('error');
+      currentWeightInput.classList.remove('invalid', 'valid');
+    }
+  }
+  
+  return isValid;
+}
+
+validateStep3() {
+  const isTargetWeightValid = this.validateTargetWeight();
+  const isHeightValid = this.validateHeight();
+  const isCurrentWeightValid = this.validateCurrentWeight();
+  
+  // Target weight is optional, so only check height and current weight
+  const isFormValid = isTargetWeightValid && isHeightValid && isCurrentWeightValid;
+  
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) {
+    nextBtn.disabled = !isFormValid;
+    nextBtn.style.opacity = isFormValid ? '1' : '0.5';
+  }
+
+  return isFormValid;
+}
+
+handleStep3Back() {
+  this.saveCurrentStepData();
+  this.goToStep(2);
+}
+
+handleStep3Next() {
+  if (!this.validateStep3()) {
+    this.showMessage('Mohon lengkapi data tinggi dan berat badan yang diperlukan', 'error');
+    return;
+  }
+
+  this.saveCurrentStepData();
+  this.showMessage('Registrasi berhasil! Mengarahkan ke halaman utama...', 'success');
+  
+  setTimeout(() => {
+    // Complete registration - redirect to home or dashboard
+    window.location.hash = '/home';
+    console.log('Final registration data:', this.getRegistrationData());
+    
+    // Optional: Clear registration data after successful completion
+    // this.clearRegistrationData();
+  }, 2000);
+}
 
   // NAVIGATION METHODS
 // NAVIGATION METHODS - Update yang ini
@@ -433,7 +680,6 @@ async reRender() {
 
 saveCurrentStepData() {
   if (this.currentStep === 1) {
-    // Save step 1 data
     const nameInput = document.getElementById('nameInput');
     const name = nameInput?.value?.trim() || '';
     
@@ -442,7 +688,6 @@ saveCurrentStepData() {
     }
   } 
   else if (this.currentStep === 2) {
-    // Save step 2 data (even if incomplete)
     const countrySelect = document.getElementById('countrySelect');
     const selectedGender = document.querySelector('.gender-option.selected');
     const ageInput = document.getElementById('ageInput');
@@ -455,6 +700,19 @@ saveCurrentStepData() {
 
     this.saveRegistrationData(data);
   }
+  else if (this.currentStep === 3) {
+    const targetWeightInput = document.getElementById('targetWeightInput');
+    const heightInput = document.getElementById('heightInput');
+    const currentWeightInput = document.getElementById('currentWeightInput');
+
+    const data = {
+      targetWeight: targetWeightInput?.value || '',
+      height: heightInput?.value || '',
+      currentWeight: currentWeightInput?.value || ''
+    };
+
+    this.saveRegistrationData(data);
+  }
 }
 
   // SHARED METHODS
@@ -462,12 +720,10 @@ loadSavedData() {
   const savedData = this.getRegistrationData();
   
   if (this.currentStep === 1) {
-    // Load name for step 1
     if (savedData.name) {
       const nameInput = document.getElementById('nameInput');
       if (nameInput) {
         nameInput.value = savedData.name;
-        // Trigger validation after loading
         setTimeout(() => {
           this.validateStep1();
         }, 100);
@@ -475,7 +731,6 @@ loadSavedData() {
     }
   } 
   else if (this.currentStep === 2) {
-    // Load data for step 2
     if (savedData.country) {
       const countrySelect = document.getElementById('countrySelect');
       if (countrySelect) {
@@ -499,9 +754,34 @@ loadSavedData() {
       }
     }
     
-    // Trigger validation after loading all data
     setTimeout(() => {
       this.validateStep2();
+    }, 200);
+  }
+  else if (this.currentStep === 3) {
+    if (savedData.targetWeight) {
+      const targetWeightInput = document.getElementById('targetWeightInput');
+      if (targetWeightInput) {
+        targetWeightInput.value = savedData.targetWeight;
+      }
+    }
+    
+    if (savedData.height) {
+      const heightInput = document.getElementById('heightInput');
+      if (heightInput) {
+        heightInput.value = savedData.height;
+      }
+    }
+    
+    if (savedData.currentWeight) {
+      const currentWeightInput = document.getElementById('currentWeightInput');
+      if (currentWeightInput) {
+        currentWeightInput.value = savedData.currentWeight;
+      }
+    }
+    
+    setTimeout(() => {
+      this.validateStep3();
     }, 200);
   }
 }
