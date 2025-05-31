@@ -17,7 +17,7 @@ export default class LandingPage {
       {
         title: 'JOIN THE<br><span class="highlight">FITNESS</span><br>REVOLUTION',
         description: 'Be part of a community that supports each other. Track your progress, celebrate victories, and push your limits with people who share your passion.',
-        background: 'https://images.unsplash.com/photo-1558618666-fbd6c0cd76c9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80'
+        background: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
       }
     ];
   }

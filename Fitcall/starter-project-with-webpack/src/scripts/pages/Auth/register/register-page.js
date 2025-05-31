@@ -2,7 +2,7 @@ export default class RegisterPage {
 constructor() {
   this.app = null;
   this.currentStep = 1;
-  this.maxStep = 3; // Updated from 2 to 3
+  this.maxStep = 4; // Updated from 3 to 4
   this.registrationData = {
     name: '',
     country: '',
@@ -11,7 +11,10 @@ constructor() {
     // Step 3 data
     targetWeight: '',
     height: '',
-    currentWeight: ''
+    currentWeight: '',
+    // Step 4 data
+    weeklyTarget: '',
+    targetDeadline: ''
   };
   
   this.initializeStep();
@@ -36,6 +39,8 @@ async render() {
       return this.renderStep2();
     case 3:
       return this.renderStep3();
+    case 4:
+      return this.renderStep4();
     default:
       return this.renderStep1();
   }
@@ -171,6 +176,56 @@ async render() {
         <button class="btn btn-back" id="backBtn">
           <span class="arrow-left">←</span>
         </button>
+        <button class="btn btn-primary" id="nextBtn" disabled>Berikutnya</button>
+      </div>
+    </div>
+  `;
+}
+
+renderStep4() {
+  return `
+    <div class="container register-container register-step4">
+      <h1 class="title">Selamat Datang</h1>
+      
+      <div class="form-container">
+        <div class="left-section">
+          <h2 class="section-title">Apa sasaran mingguanmu</h2>
+          <p class="subtitle">Pilih Satu</p>
+          
+          <div class="input-group">
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="target" value="0.25" id="target025">
+                <span class="radio-text">Naik 0,25 kg per minggu</span>
+                <span class="radio-circle"></span>
+              </label>
+              
+              <label class="radio-option">
+                <input type="radio" name="target" value="1" id="target1">
+                <span class="radio-text">Naik 1 kg per minggu</span>
+                <span class="radio-circle"></span>
+              </label>
+            </div>
+            <div class="form-error">Mohon pilih sasaran mingguan</div>
+          </div>
+        </div>
+        
+        <div class="right-section">
+          <h2 class="section-title">Batas waktu Sasaran</h2>
+          
+          <div class="input-group">
+            <div class="date-input-container">
+              <input type="date" class="date-input" id="targetDeadlineInput">
+            </div>
+            <div class="form-error">Mohon pilih batas waktu sasaran</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-container">
+        <button class="btn btn-back" id="backBtn">
+          <span class="arrow-left">←</span>
+        </button>
         <button class="btn btn-primary" id="nextBtn" disabled>Selesai</button>
       </div>
     </div>
@@ -187,6 +242,9 @@ async afterRender() {
       break;
     case 3:
       this.initializeStep3();
+      break;
+    case 4:
+      this.initializeStep4();
       break;
   }
   this.loadSavedData();
@@ -632,6 +690,152 @@ validateStep3() {
   return isFormValid;
 }
 
+// STEP 4 METHODS
+initializeStep4() {
+  // Back button
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      this.handleStep4Back();
+    });
+  }
+
+  // Next button
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      this.handleStep4Next();
+    });
+  }
+
+  // Radio buttons for weekly target
+  const radioButtons = document.querySelectorAll('input[name="target"]');
+  radioButtons.forEach(radio => {
+    radio.addEventListener('change', () => {
+      this.validateWeeklyTarget();
+      this.validateStep4();
+    });
+  });
+
+  // Date input for deadline
+  const dateInput = document.getElementById('targetDeadlineInput');
+  if (dateInput) {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+
+    dateInput.addEventListener('change', () => {
+      this.validateTargetDeadline();
+      this.validateStep4();
+    });
+
+    dateInput.addEventListener('blur', () => {
+      this.validateTargetDeadline();
+    });
+
+    // Enter key support
+    dateInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextBtn = document.getElementById('nextBtn');
+        if (!nextBtn.disabled) {
+          this.handleStep4Next();
+        }
+      }
+    });
+  }
+}
+
+validateWeeklyTarget() {
+  const selectedRadio = document.querySelector('input[name="target"]:checked');
+  const radioGroup = document.querySelector('.radio-group')?.parentElement;
+  
+  const isValid = selectedRadio !== null;
+  
+  if (radioGroup) {
+    if (isValid) {
+      radioGroup.classList.remove('error');
+    } else {
+      radioGroup.classList.add('error');
+    }
+  }
+  
+  return isValid;
+}
+
+validateTargetDeadline() {
+  const dateInput = document.getElementById('targetDeadlineInput');
+  const dateGroup = dateInput?.parentElement?.parentElement;
+  const selectedDate = dateInput?.value;
+  
+  let isValid = false;
+  
+  if (selectedDate) {
+    const inputDate = new Date(selectedDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+    
+    // Must be today or future date
+    isValid = inputDate >= today;
+  }
+  
+  if (dateGroup) {
+    if (selectedDate && !isValid) {
+      dateGroup.classList.add('error');
+      dateInput.classList.add('invalid');
+      dateInput.classList.remove('valid');
+    } else if (selectedDate && isValid) {
+      dateGroup.classList.remove('error');
+      dateInput.classList.remove('invalid');
+      dateInput.classList.add('valid');
+    } else {
+      dateGroup.classList.remove('error');
+      dateInput.classList.remove('invalid', 'valid');
+    }
+  }
+  
+  return selectedDate && isValid;
+}
+
+validateStep4() {
+  const isWeeklyTargetValid = this.validateWeeklyTarget();
+  const isTargetDeadlineValid = this.validateTargetDeadline();
+  
+  const isFormValid = isWeeklyTargetValid && isTargetDeadlineValid;
+  
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) {
+    nextBtn.disabled = !isFormValid;
+    nextBtn.style.opacity = isFormValid ? '1' : '0.5';
+  }
+
+  return isFormValid;
+}
+
+handleStep4Back() {
+  this.saveCurrentStepData();
+  this.goToStep(3);
+}
+
+handleStep4Next() {
+  if (!this.validateStep4()) {
+    this.showMessage('Mohon lengkapi sasaran mingguan dan batas waktu', 'error');
+    return;
+  }
+
+  this.saveCurrentStepData();
+  this.showMessage('Registrasi berhasil! Selamat datang...', 'success');
+  
+  setTimeout(() => {
+    // Complete registration - redirect to home or dashboard
+    window.location.hash = '/home';
+    console.log('Final registration data:', this.getRegistrationData());
+    
+    // Optional: Clear registration data after successful completion
+    // this.clearRegistrationData();
+  }, 2000);
+}
+
 handleStep3Back() {
   this.saveCurrentStepData();
   this.goToStep(2);
@@ -644,16 +848,11 @@ handleStep3Next() {
   }
 
   this.saveCurrentStepData();
-  this.showMessage('Registrasi berhasil! Mengarahkan ke halaman utama...', 'success');
+  this.showMessage('Data tersimpan! Melanjutkan ke step berikutnya...', 'success');
   
   setTimeout(() => {
-    // Complete registration - redirect to home or dashboard
-    window.location.hash = '/home';
-    console.log('Final registration data:', this.getRegistrationData());
-    
-    // Optional: Clear registration data after successful completion
-    // this.clearRegistrationData();
-  }, 2000);
+    this.goToStep(4); // Changed to step 4
+  }, 1000);
 }
 
   // NAVIGATION METHODS
@@ -709,6 +908,17 @@ saveCurrentStepData() {
       targetWeight: targetWeightInput?.value || '',
       height: heightInput?.value || '',
       currentWeight: currentWeightInput?.value || ''
+    };
+
+    this.saveRegistrationData(data);
+  }
+  else if (this.currentStep === 4) {
+    const selectedRadio = document.querySelector('input[name="target"]:checked');
+    const dateInput = document.getElementById('targetDeadlineInput');
+
+    const data = {
+      weeklyTarget: selectedRadio?.value || '',
+      targetDeadline: dateInput?.value || ''
     };
 
     this.saveRegistrationData(data);
@@ -782,6 +992,25 @@ loadSavedData() {
     
     setTimeout(() => {
       this.validateStep3();
+    }, 200);
+  }
+  else if (this.currentStep === 4) {
+    if (savedData.weeklyTarget) {
+      const radioButton = document.querySelector(`input[name="target"][value="${savedData.weeklyTarget}"]`);
+      if (radioButton) {
+        radioButton.checked = true;
+      }
+    }
+    
+    if (savedData.targetDeadline) {
+      const dateInput = document.getElementById('targetDeadlineInput');
+      if (dateInput) {
+        dateInput.value = savedData.targetDeadline;
+      }
+    }
+    
+    setTimeout(() => {
+      this.validateStep4();
     }, 200);
   }
 }

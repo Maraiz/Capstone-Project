@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang</title>
+
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 60px;
+    text-align: left;
+}
+
+.form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-bottom: 80px;
+    align-items: start; /* Menyelaraskan ke atas */
+}
+
+.left-section h2,
+.right-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.subtitle {
+    color: #888;
+    margin-bottom: 30px;
+    font-size: 1rem;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 25px;
+    border: 2px solid #444;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.radio-option:hover {
+    border-color: #666;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-text {
+    font-size: 1.1rem;
+    flex: 1;
+}
+
+.radio-circle {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-option input[type="radio"]:checked + .radio-text + .radio-circle {
+    border-color: #0ea5e9;
+    background-color: #0ea5e9;
+}
+
+.radio-option input[type="radio"]:checked + .radio-text + .radio-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.right-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-input-container {
+    margin-top: 30px; /* Menyesuaikan dengan subtitle di sebelah kiri */
+}
+
+.date-input {
+    width: 100%;
+    padding: 20px 25px;
+    background-color: transparent;
+    border: 2px solid #444;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+    height: 64px; /* Menyamakan tinggi dengan radio button */
+}
+
+.date-input:focus {
+    border-color: #0ea5e9;
+}
+
+/* Styling untuk date picker */
+.date-input::-webkit-datetime-edit {
+    color: #888;
+    padding: 0;
+}
+
+.date-input::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.date-input::-webkit-datetime-edit-text {
+    color: #888;
+    padding: 0;
+}
+
+.date-input::-webkit-datetime-edit-month-field,
+.date-input::-webkit-datetime-edit-day-field,
+.date-input::-webkit-datetime-edit-year-field {
+    color: white;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    background-color: #0ea5e9;
+    border-radius: 4px;
+    cursor: pointer;
+    filter: invert(1);
+    padding: 4px;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+    background-color: #0284c7;
+}
+
+.button-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.back-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #0ea5e9;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-button:hover {
+    background-color: #0284c7;
+    transform: translateY(-2px);
+}
+
+.next-button {
+    padding: 18px 50px;
+    background-color: #0ea5e9;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.next-button:hover {
+    background-color: #0284c7;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 40px;
+    }
+    
+    .container {
+        padding: 20px 15px;
+    }
+    
+    .button-container {
+        justify-content: center;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selamat Datang</h1>
+        
+        <div class="form-container">
+            <div class="left-section">
+                <h2>Apa sasaran mingguanmu</h2>
+                <p class="subtitle">Pilih Satu</p>
+                
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="target" value="0.25">
+                        <span class="radio-text">Naik 0,25 kg per minggu</span>
+                        <span class="radio-circle"></span>
+                    </label>
+                    
+                    <label class="radio-option">
+                        <input type="radio" name="target" value="1">
+                        <span class="radio-text">Naik 1 kg per minggu</span>
+                        <span class="radio-circle"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="right-section">
+                <h2>Batas waktu Sasaran</h2>
+                
+                <div class="date-input-container">
+                    <input type="date" class="date-input">
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button class="back-button">←</button>
+            <button class="next-button">Berikutnya</button>
+        </div>
+    </div>
+</body>
+</html>
