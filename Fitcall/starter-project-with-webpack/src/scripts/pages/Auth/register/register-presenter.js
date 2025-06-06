@@ -1,19 +1,18 @@
 import RegisterModel from './register-model.js';
 
 export default class RegisterPresenter {
-  constructor(view) {
-    this.view = view;
-    this.model = new RegisterModel();
-    this.currentStep = 1;
-    this.maxStep = 6;
-    
-    // Set presenter reference in view
-    this.view.setPresenter(this);
-    
-    // Initialize
-    this.initializeStep();
-  }
-
+constructor(view) {
+  this.view = view;
+  this.model = new RegisterModel();
+  this.currentStep = 1;
+  this.maxStep = 7; // Update dari 6 ke 7
+  
+  // Set presenter reference in view
+  this.view.setPresenter(this);
+  
+  // Initialize
+  this.initializeStep();
+}
   // Initialization
   initializeStep() {
     const hash = window.location.hash;
@@ -55,44 +54,54 @@ export default class RegisterPresenter {
     await this.initialize();
   }
 
-  handleBackButton(stepNumber) {
-    switch(stepNumber) {
-      case 1:
-        window.location.hash = '/login';
-        break;
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-        this.goToStep(stepNumber - 1);
-        break;
-      case 6:
-        this.goToStep(5);
-        break;
-    }
+handleBackButton(stepNumber) {
+  switch(stepNumber) {
+    case 1:
+      window.location.hash = '/login';
+      break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7: // Tambah case 7
+      this.goToStep(stepNumber - 1);
+      break;
+  }
+}
+
+async handleNextButton(stepNumber) {
+  const validation = this.model.validateStep(stepNumber);
+  
+  if (!validation.valid) {
+    this.showValidationErrors(validation.fieldResults);
+    this.view.showMessage('Mohon lengkapi semua data yang diperlukan', 'error');
+    return;
   }
 
-  async handleNextButton(stepNumber) {
-    const validation = this.model.validateStep(stepNumber);
-    
-    if (!validation.valid) {
-      this.showValidationErrors(validation.fieldResults);
-      this.view.showMessage('Mohon lengkapi semua data yang diperlukan', 'error');
-      return;
-    }
-
-    // Show success message and proceed
-    this.view.showMessage('Data tersimpan! Melanjutkan...', 'success');
-    
-    setTimeout(async () => {
-      if (stepNumber < this.maxStep) {
-        await this.goToStep(stepNumber + 1);
-      } else {
-        // This shouldn't happen as step 6 uses handleComplete
-        this.handleComplete();
-      }
-    }, 1000);
+  if (stepNumber === 7) {
+    // Step 7 adalah step terakhir, langsung complete registration
+    this.handleComplete();
+    return;
   }
+
+  // Show success message and proceed
+  this.view.showMessage('Data tersimpan! Melanjutkan...', 'success');
+  
+  setTimeout(async () => {
+    if (stepNumber < this.maxStep) {
+      await this.goToStep(stepNumber + 1);
+    }
+  }, 1000);
+}
+
+  async handleContinueToAccount() {
+  this.view.showMessage('Melanjutkan ke pembuatan akun...', 'info');
+  
+  setTimeout(async () => {
+    await this.goToStep(7);
+  }, 1000);
+}
 
   // Field change handler
   handleFieldChange(field, value) {
@@ -159,24 +168,32 @@ export default class RegisterPresenter {
   }
 
   // Complete registration
-  async handleComplete() {
-    try {
-      const success = this.model.completeRegistration();
+async handleComplete() {
+  try {
+    // Validasi final
+    const step7Validation = this.model.validateStep(7);
+    if (!step7Validation.valid) {
+      this.showValidationErrors(step7Validation.fieldResults);
+      this.view.showMessage('Mohon lengkapi semua data akun', 'error');
+      return;
+    }
+
+    const success = this.model.completeRegistration();
+    
+    if (success) {
+      this.view.showMessage('Akun berhasil dibuat! Selamat memulai perjalanan sehatmu!', 'success');
       
-      if (success) {
-        this.view.showMessage('Profil berhasil dibuat! Selamat memulai perjalanan sehatmu!', 'success');
-        
-        setTimeout(() => {
-          window.location.hash = '/home';
-        }, 2000);
-      } else {
-        this.view.showMessage('Terjadi kesalahan saat menyimpan data', 'error');
-      }
-    } catch (error) {
-      console.error('Error completing registration:', error);
+      setTimeout(() => {
+        window.location.hash = '/home';
+      }, 2000);
+    } else {
       this.view.showMessage('Terjadi kesalahan saat menyimpan data', 'error');
     }
+  } catch (error) {
+    console.error('Error completing registration:', error);
+    this.view.showMessage('Terjadi kesalahan saat menyimpan data', 'error');
   }
+}
 
   // Detail toggle for step 6
   handleDetailToggle() {
