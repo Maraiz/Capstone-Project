@@ -1,0 +1,36 @@
+GET http://localhost:5000/users
+
+###
+POST  http://localhost:5000/users
+Content-Type: application/json
+
+{
+    // Step 1 - Basic Info
+    "name": "Maulana Akbar",
+    
+    // Step 2 - Personal Info
+    "country": "indonesia", 
+    "gender": "male",
+    "age": 25,
+    
+    // Step 3 - Physical Info
+    "height": 170,
+    "currentWeight": 75.5,
+    "targetWeight": 70,
+    
+    // Step 4 - Goals  
+    "weeklyTarget": 0.5,
+    "targetDeadline": "2024-12-31",
+    
+    // Step 5 - Activity
+    "activityLevel": 1.55,
+    
+    // Step 6 - Calories (optional, akan dihitung otomatis)
+    // "targetCalories": 2000,
+    
+    // Step 7 - Account
+    "username": "maulana123",
+    "email": "maulana@gmail.com", 
+    "password": "12345678",
+    "confirmPassword": "12345678"
+}
