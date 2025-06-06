@@ -1,6 +1,6 @@
 import HomePage from '../pages/home/home-page';
 import LandingPage from '../pages/home/landing-page';
-import LoginPage from '../pages/Auth/login-page';
+import LoginPage from '../pages/Auth/login/login-page';
 import RegisterPage from '../pages/Auth/register/register-page';
 
 const routes = {

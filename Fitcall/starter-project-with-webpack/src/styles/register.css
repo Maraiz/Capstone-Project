@@ -91,9 +91,6 @@
   max-width: 200px;
   min-width: 120px;
   height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 25px;
   border: none;
   font-size: 1rem;
@@ -937,4 +934,672 @@
 
 .register-step4 .date-input:focus {
   transform: translateY(-1px);
+}
+
+/* Step 6 - Calorie Result Page */
+.register-step6 {
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calorie-result-page {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  padding: 2rem;
+}
+
+/* Circular Calorie Display */
+.calorie-circle-container {
+  margin-bottom: 3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.calorie-circle {
+  width: 280px;
+  height: 280px;
+  border: 8px solid #00ff88;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: #2a2a2a;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+}
+
+.calorie-number {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.calorie-label {
+  font-size: 1rem;
+  color: #cccccc;
+  font-weight: 400;
+}
+
+/* Result Description */
+.result-description {
+  margin-bottom: 3rem;
+}
+
+.result-description p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #cccccc;
+  margin: 0;
+}
+
+.result-description strong {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+/* Action Button */
+.result-action {
+  margin-bottom: 2rem;
+}
+
+.btn-large {
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 50px;
+  min-width: 200px;
+  background: #007bff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-large:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+}
+
+/* Detail Toggle */
+.detail-toggle {
+  margin-bottom: 2rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #888;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.btn-link:hover {
+  color: #00ff88;
+}
+
+/* Detailed Breakdown */
+.detailed-breakdown {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid #404040;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+}
+
+.breakdown-label {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.breakdown-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #00ff88;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calorie-circle {
+    width: 220px;
+    height: 220px;
+  }
+  
+  .calorie-number {
+    font-size: 2.8rem;
+  }
+  
+  .result-description p {
+    font-size: 1.1rem;
+  }
+  
+  .breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animation for circle */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.calorie-circle {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+/* Register Step 5 Styles - Activity Level */
+.register-step5 {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+.register-step5 .title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.register-step5 .form-container {
+  margin-bottom: 60px;
+}
+
+.register-step5 .activity-section {
+  text-align: center;
+}
+
+.register-step5 .section-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
+.register-step5 .subtitle {
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+  line-height: 1.4;
+}
+
+/* Activity Options Grid */
+.register-step5 .activity-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.register-step5 .activity-option {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #2a2a2a 0%, #1f1f1f 100%);
+  border: 2px solid #404040;
+  transform: translateY(0);
+}
+
+.register-step5 .activity-option:hover {
+  transform: translateY(-8px);
+  border-color: #007AFF;
+  box-shadow: 0 12px 24px rgba(0, 122, 255, 0.2);
+}
+
+.register-step5 .activity-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  z-index: 2;
+}
+
+.register-step5 .activity-card {
+  padding: 30px 25px;
+  text-align: center;
+  position: relative;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.register-step5 .activity-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.register-step5 .activity-card p {
+  font-size: 0.95rem;
+  color: #bbbbbb;
+  line-height: 1.4;
+  margin: 0 0 20px 0;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.register-step5 .activity-level {
+  font-size: 0.85rem;
+  color: #007AFF;
+  font-weight: 600;
+  background: rgba(0, 122, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 122, 255, 0.3);
+}
+
+.register-step5 .radio-circle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #666;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+/* Selected State */
+.register-step5 .activity-option input[type="radio"]:checked + .activity-card {
+  background: linear-gradient(145deg, #1a365d 0%, #2d5a87 100%);
+}
+
+.register-step5 .activity-option input[type="radio"]:checked ~ .radio-circle {
+  border-color: #007AFF;
+  background-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+.register-step5 .activity-option input[type="radio"]:checked ~ .radio-circle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.register-step5 .activity-option input[type="radio"]:checked + .activity-card .activity-level {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.register-step5 .activity-option input[type="radio"]:checked + .activity-card h3 {
+  color: #ffffff;
+}
+
+.register-step5 .activity-option input[type="radio"]:checked + .activity-card p {
+  color: #e2e8f0;
+}
+
+/* Error State */
+.register-step5 .input-group.error .activity-options {
+  border: 2px solid #dc3545;
+  border-radius: 16px;
+  padding: 20px;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.register-step5 .input-group.error .activity-option {
+  border-color: #dc3545;
+}
+
+/* Form Error */
+.register-step5 .form-error {
+  color: #dc3545;
+  font-size: 1rem;
+  margin-top: 20px;
+  text-align: center;
+  display: none;
+  font-weight: 500;
+}
+
+.register-step5 .input-group.error .form-error {
+  display: block;
+}
+
+/* Button Styles */
+.register-step5 .button-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 50px;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-step5 .btn-back {
+  background: linear-gradient(135deg, #007AFF 0%, #0056b3 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 0;
+  flex-shrink: 0;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.register-step5 .btn-back:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.4);
+}
+
+.register-step5 .btn-primary {
+  background: linear-gradient(135deg, #007AFF 0%, #0056b3 100%);
+  color: white;
+  padding: 18px 40px;
+  border-radius: 50px;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 200px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.register-step5 .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.register-step5 .btn-primary:hover::before {
+  left: 100%;
+}
+
+.register-step5 .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.5);
+}
+
+.register-step5 .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #404040 0%, #2a2a2a 100%);
+  box-shadow: none;
+}
+
+.register-step5 .btn-primary:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .register-step5 {
+    padding: 30px 15px;
+  }
+
+  .register-step5 .title {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .register-step5 .section-title {
+    font-size: 1.4rem;
+  }
+
+  .register-step5 .subtitle {
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+
+  .register-step5 .activity-options {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .register-step5 .activity-card {
+    padding: 25px 20px;
+    height: 160px;
+  }
+
+  .register-step5 .activity-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .register-step5 .activity-card p {
+    font-size: 0.9rem;
+  }
+
+  .register-step5 .button-container {
+    gap: 15px;
+    margin-top: 40px;
+  }
+
+  .register-step5 .btn-back {
+    width: 55px;
+    height: 55px;
+    font-size: 1.2rem;
+  }
+
+  .register-step5 .btn-primary {
+    padding: 16px 35px;
+    font-size: 1.1rem;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-step5 {
+    padding: 20px 10px;
+  }
+
+  .register-step5 .title {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
+
+  .register-step5 .section-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+
+  .register-step5 .subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+  }
+
+  .register-step5 .activity-options {
+    gap: 12px;
+  }
+
+  .register-step5 .activity-card {
+    padding: 20px 15px;
+    height: 150px;
+  }
+
+  .register-step5 .activity-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .register-step5 .activity-card p {
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+  }
+
+  .register-step5 .activity-level {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .register-step5 .radio-circle {
+    width: 20px;
+    height: 20px;
+    top: 15px;
+    right: 15px;
+  }
+
+  .register-step5 .radio-circle::after {
+    width: 6px;
+    height: 6px;
+  }
+
+  .register-step5 .button-container {
+    gap: 12px;
+    margin-top: 30px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .register-step5 .btn-back {
+    width: 50px;
+    height: 50px;
+    font-size: 1.1rem;
+    align-self: center;
+  }
+
+  .register-step5 .btn-primary {
+    padding: 14px 30px;
+    font-size: 1rem;
+    min-width: 160px;
+    width: 100%;
+    max-width: 250px;
+    align-self: center;
+  }
+}
+
+/* Animation Effects */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.register-step5 .activity-option {
+  animation: cardSlideIn 0.6s ease-out;
+}
+
+.register-step5 .activity-option:nth-child(1) { animation-delay: 0.1s; }
+.register-step5 .activity-option:nth-child(2) { animation-delay: 0.2s; }
+.register-step5 .activity-option:nth-child(3) { animation-delay: 0.3s; }
+.register-step5 .activity-option:nth-child(4) { animation-delay: 0.4s; }
+.register-step5 .activity-option:nth-child(5) { animation-delay: 0.5s; }
+
+/* Subtle pulse animation for radio circle when hovered */
+.register-step5 .activity-option:hover .radio-circle {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 122, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
+  }
+}
+
+/* Shimmer effect on cards */
+.register-step5 .activity-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transition: left 0.8s;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.register-step5 .activity-option:hover::before {
+  left: 100%;
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .register-step5 .activity-option {
+    background: linear-gradient(145deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-color: #4a4a4a;
+  }
+  
+  .register-step5 .activity-option:hover {
+    border-color: #007AFF;
+    background: linear-gradient(145deg, #333333 0%, #1f1f1f 100%);
+  }
 }
