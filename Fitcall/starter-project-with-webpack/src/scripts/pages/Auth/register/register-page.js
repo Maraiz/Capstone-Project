@@ -3,12 +3,11 @@ import RegisterPresenter from './register-presenter.js';
 export default class RegisterPage {
   constructor() {
     this.currentStep = 1;
-    this.maxStep = 7; // Update dari 6 ke 7
+    this.maxStep = 7;
     this.presenter = null;
-
-    // Initialize presenter
     this.presenter = new RegisterPresenter(this);
   }
+
   setPresenter(presenter) {
     this.presenter = presenter;
   }
@@ -17,7 +16,10 @@ export default class RegisterPage {
     this.currentStep = step;
   }
 
-  // Main render method
+  // ================================
+  // RENDER METHODS
+  // ================================
+
   async render() {
     switch (this.currentStep) {
       case 1: return this.renderStep1();
@@ -263,115 +265,121 @@ export default class RegisterPage {
     `;
   }
 
-renderStep6() {
-  const calculationResults = this.presenter.getCalorieCalculation();
-  const data = this.presenter.getRegistrationData();
-  
-  return `
-    <div class="container register-container register-step6">
-      <div class="calorie-result-page">
-        
-        <div class="calorie-circle-container">
-          <div class="calorie-circle">
-            <div class="calorie-number">${calculationResults.targetCalories}</div>
-            <div class="calorie-label">Kcal per hari</div>
-          </div>
-        </div>
-        
-        <div class="result-description">
-          <p>Saya akan membantu Anda mencapai tujuan <strong>${data.targetWeight ? data.targetWeight + ' Kg' : 'berat ideal'}</strong> dengan memastikan Anda mengonsumsi <strong>${calculationResults.targetCalories} kcal</strong> setiap hari</p>
-        </div>
-        
-        <div class="result-action">
-          <button class="btn btn-primary btn-large" id="continueBtn">Lanjutkan</button>
-        </div>
-        
-        <div class="detail-toggle">
-          <button class="btn-link" id="showDetailsBtn">Lihat Detail Kalkulasi</button>
-        </div>
-        
-        <div class="detailed-breakdown" id="detailedBreakdown" style="display: none;">
-          <div class="breakdown-grid">
-            <div class="breakdown-item">
-              <div class="breakdown-label">BMR (Metabolisme Dasar)</div>
-              <div class="breakdown-value">${calculationResults.bmr} kcal</div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-label">TDEE (Total Kebutuhan)</div>
-              <div class="breakdown-value">${calculationResults.tdee} kcal</div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-label">Target Penurunan</div>
-              <div class="breakdown-value">${data.weeklyTarget} kg/minggu</div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-label">Defisit Harian</div>
-              <div class="breakdown-value">${calculationResults.dailyDeficit} kcal</div>
+  renderStep6() {
+    const calculationResults = this.presenter.getCalorieCalculation();
+    const data = this.presenter.getRegistrationData();
+    
+    return `
+      <div class="container register-container register-step6">
+        <div class="calorie-result-page">
+          
+          <div class="calorie-circle-container">
+            <div class="calorie-circle">
+              <div class="calorie-number">${calculationResults.targetCalories}</div>
+              <div class="calorie-label">Kcal per hari</div>
             </div>
           </div>
+          
+          <div class="result-description">
+            <p>Saya akan membantu Anda mencapai tujuan <strong>${data.targetWeight ? data.targetWeight + ' Kg' : 'berat ideal'}</strong> dengan memastikan Anda mengonsumsi <strong>${calculationResults.targetCalories} kcal</strong> setiap hari</p>
+          </div>
+          
+          <div class="result-action">
+            <button class="btn btn-primary btn-large" id="continueBtn">Lanjutkan</button>
+          </div>
+          
+          <div class="detail-toggle">
+            <button class="btn-link" id="showDetailsBtn">Lihat Detail Kalkulasi</button>
+          </div>
+          
+          <div class="detailed-breakdown" id="detailedBreakdown" style="display: none;">
+            <div class="breakdown-grid">
+              <div class="breakdown-item">
+                <div class="breakdown-label">BMR (Metabolisme Dasar)</div>
+                <div class="breakdown-value">${calculationResults.bmr} kcal</div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-label">TDEE (Total Kebutuhan)</div>
+                <div class="breakdown-value">${calculationResults.tdee} kcal</div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-label">Target Penurunan</div>
+                <div class="breakdown-value">${data.weeklyTarget} kg/minggu</div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-label">Defisit Harian</div>
+                <div class="breakdown-value">${calculationResults.dailyDeficit} kcal</div>
+              </div>
+            </div>
+          </div>
+          
         </div>
-        
       </div>
-    </div>
-  `;
-}
+    `;
+  }
 
   renderStep7() {
     return `
-    <div class="container register-container register-step7">
-      <h1 class="title">Buat Akun</h1>
-      
-      <div class="form-section">
-        <h2 class="question">Langkah terakhir, buat akun untuk menyimpan progresmu</h2>
+      <div class="container register-container register-step7">
+        <h1 class="title">Buat Akun</h1>
         
-        <div class="input-group">
-          <label class="input-label">Username</label>
-          <input type="text" id="usernameInput" class="input-field" placeholder="Masukkan username" maxlength="20">
-          <div class="input-description">Username hanya boleh mengandung huruf, angka, dan underscore (_)</div>
-          <div class="form-error">Username minimal 3 karakter dan maksimal 20 karakter</div>
-        </div>
-        
-        <div class="input-group">
-          <label class="input-label">Email</label>
-          <input type="email" id="emailInput" class="input-field" placeholder="Masukkan email">
-          <div class="form-error">Format email tidak valid</div>
-        </div>
-        
-        <div class="input-group">
-          <label class="input-label">Password</label>
-          <div class="password-input-container">
-            <input type="password" id="passwordInput" class="input-field password-field" placeholder="Masukkan password" maxlength="50">
-            <button type="button" class="password-toggle" id="passwordToggle">
-              <span class="eye-icon">👁️</span>
-            </button>
+        <div class="form-section">
+          <h2 class="question">Langkah terakhir, buat akun untuk menyimpan progresmu</h2>
+          
+          <div class="input-group">
+            <label class="input-label">Username</label>
+            <input type="text" id="usernameInput" class="input-field" placeholder="Masukkan username" maxlength="20">
+            <div class="input-description">Username hanya boleh mengandung huruf, angka, dan underscore (_)</div>
+            <div class="form-error">Username minimal 3 karakter dan maksimal 20 karakter</div>
           </div>
-          <div class="input-description">Password minimal 6 karakter</div>
-          <div class="form-error">Password minimal 6 karakter dan maksimal 50 karakter</div>
+          
+          <div class="input-group">
+            <label class="input-label">Email</label>
+            <input type="email" id="emailInput" class="input-field" placeholder="Masukkan email">
+            <div class="form-error">Format email tidak valid</div>
+          </div>
+          
+          <div class="input-group">
+            <label class="input-label">Password</label>
+            <div class="password-input-container">
+              <input type="password" id="passwordInput" class="input-field password-field" placeholder="Masukkan password" maxlength="50">
+              <button type="button" class="password-toggle" id="passwordToggle">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+            <div class="input-description">Password minimal 6 karakter</div>
+            <div class="form-error">Password minimal 6 karakter dan maksimal 50 karakter</div>
+          </div>
+          
+          <div class="input-group">
+            <label class="input-label">Konfirmasi Password</label>
+            <div class="password-input-container">
+              <input type="password" id="confirmPasswordInput" class="input-field password-field" placeholder="Ulangi password" maxlength="50">
+              <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+            <div class="form-error">Konfirmasi password tidak sesuai</div>
+          </div>
         </div>
         
-        <div class="input-group">
-          <label class="input-label">Konfirmasi Password</label>
-          <div class="password-input-container">
-            <input type="password" id="confirmPasswordInput" class="input-field password-field" placeholder="Ulangi password" maxlength="50">
-            <button type="button" class="password-toggle" id="confirmPasswordToggle">
-              <span class="eye-icon">👁️</span>
-            </button>
-          </div>
-          <div class="form-error">Konfirmasi password tidak sesuai</div>
+        <div class="button-container">
+          <button class="btn btn-back" id="backBtn">
+            <span class="arrow-left">←</span>
+          </button>
+          <button class="btn btn-primary" id="nextBtn" disabled>
+            <span class="btn-text">Buat Akun</span>
+            <span class="btn-loading" style="display: none;">⏳ Memproses...</span>
+          </button>
         </div>
       </div>
-      
-      <div class="button-container">
-        <button class="btn btn-back" id="backBtn">
-          <span class="arrow-left">←</span>
-        </button>
-        <button class="btn btn-primary" id="nextBtn" disabled>Buat Akun</button>
-      </div>
-    </div>
-  `;
+    `;
   }
 
-  // Event binding methods
+  // ================================
+  // EVENT BINDING - SAME AS BEFORE
+  // ================================
+
   bindEvents() {
     switch (this.currentStep) {
       case 1: this.bindStep1Events(); break;
@@ -558,27 +566,98 @@ renderStep6() {
     });
   }
 
-// Update bindStep6Events
-bindStep6Events() {
-  const continueBtn = document.getElementById('continueBtn');
-  const showDetailsBtn = document.getElementById('showDetailsBtn');
+  bindStep6Events() {
+    const continueBtn = document.getElementById('continueBtn');
+    const showDetailsBtn = document.getElementById('showDetailsBtn');
 
-  if (continueBtn) {
-    continueBtn.addEventListener('click', () => {
-      this.presenter.handleContinueToAccount();
-    });
+    if (continueBtn) {
+      continueBtn.addEventListener('click', () => {
+        this.presenter.handleContinueToAccount();
+      });
 
-    setTimeout(() => continueBtn.focus(), 500);
+      setTimeout(() => continueBtn.focus(), 500);
+    }
+
+    if (showDetailsBtn) {
+      showDetailsBtn.addEventListener('click', () => {
+        this.presenter.handleDetailToggle();
+      });
+    }
   }
 
-  if (showDetailsBtn) {
-    showDetailsBtn.addEventListener('click', () => {
-      this.presenter.handleDetailToggle();
-    });
-  }
-}
+  bindStep7Events() {
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const usernameInput = document.getElementById('usernameInput');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
 
-  // UI Update Methods
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        this.presenter.handleBackButton(7);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        this.presenter.handleNextButton(7);
+      });
+    }
+
+    if (usernameInput) {
+      usernameInput.addEventListener('input', () => {
+        this.presenter.handleFieldChange('username', usernameInput.value);
+      });
+    }
+
+    if (emailInput) {
+      emailInput.addEventListener('input', () => {
+        this.presenter.handleFieldChange('email', emailInput.value);
+      });
+    }
+
+    if (passwordInput) {
+      passwordInput.addEventListener('input', () => {
+        this.presenter.handleFieldChange('password', passwordInput.value);
+      });
+    }
+
+    if (confirmPasswordInput) {
+      confirmPasswordInput.addEventListener('input', () => {
+        this.presenter.handleFieldChange('confirmPassword', confirmPasswordInput.value);
+      });
+
+      confirmPasswordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !nextBtn.disabled) {
+          this.presenter.handleNextButton(7);
+        }
+      });
+    }
+
+    if (passwordToggle && passwordInput) {
+      passwordToggle.addEventListener('click', () => {
+        this.togglePasswordVisibility(passwordInput, passwordToggle);
+      });
+    }
+
+    if (confirmPasswordToggle && confirmPasswordInput) {
+      confirmPasswordToggle.addEventListener('click', () => {
+        this.togglePasswordVisibility(confirmPasswordInput, confirmPasswordToggle);
+      });
+    }
+
+    setTimeout(() => {
+      if (usernameInput) usernameInput.focus();
+    }, 100);
+  }
+
+  // ================================
+  // UI UPDATE METHODS
+  // ================================
+
   updateFormValidation(field, validation) {
     const input = document.getElementById(field + 'Input') ||
       document.getElementById(field + 'Select') ||
@@ -609,31 +688,6 @@ bindStep6Events() {
     }
   }
 
-  loadFormData(data) {
-    Object.keys(data).forEach(field => {
-      const value = data[field];
-      if (!value) return;
-
-      const input = document.getElementById(field + 'Input') ||
-        document.getElementById(field + 'Select');
-
-      if (input) {
-        input.value = value;
-      } else if (field === 'gender') {
-        setTimeout(() => {
-          this.selectGender(value);
-        }, 100);
-      } else if (field === 'weeklyTarget' || field === 'activityLevel') {
-        setTimeout(() => {
-          const radio = document.querySelector(`input[value="${value}"]`);
-          if (radio) {
-            radio.checked = true;
-          }
-        }, 100);
-      }
-    });
-  }
-
   selectGender(genderValue) {
     document.querySelectorAll('.gender-option').forEach(option => {
       option.classList.remove('selected');
@@ -662,108 +716,28 @@ bindStep6Events() {
     }
   }
 
-  // Tambahkan method bindStep7Events
-bindStep7Events() {
-  const backBtn = document.getElementById('backBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const usernameInput = document.getElementById('usernameInput');
-  const emailInput = document.getElementById('emailInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-  const passwordToggle = document.getElementById('passwordToggle');
-  const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
-
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      this.presenter.handleBackButton(7);
-    });
+  togglePasswordVisibility(input, toggleBtn) {
+    const eyeIcon = toggleBtn.querySelector('.eye-icon');
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      eyeIcon.textContent = '🙈';
+      toggleBtn.setAttribute('aria-label', 'Sembunyikan password');
+    } else {
+      input.type = 'password';
+      eyeIcon.textContent = '👁️';
+      toggleBtn.setAttribute('aria-label', 'Tampilkan password');
+    }
   }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      this.presenter.handleNextButton(7);
-    });
-  }
-
-  // Username input events
-  if (usernameInput) {
-    usernameInput.addEventListener('input', () => {
-      this.presenter.handleFieldChange('username', usernameInput.value);
-    });
-  }
-
-  // Email input events
-  if (emailInput) {
-    emailInput.addEventListener('input', () => {
-      this.presenter.handleFieldChange('email', emailInput.value);
-    });
-  }
-
-  // Password input events
-  if (passwordInput) {
-    passwordInput.addEventListener('input', () => {
-      this.presenter.handleFieldChange('password', passwordInput.value);
-    });
-  }
-
-  // Confirm password input events
-  if (confirmPasswordInput) {
-    confirmPasswordInput.addEventListener('input', () => {
-      this.presenter.handleFieldChange('confirmPassword', confirmPasswordInput.value);
-    });
-
-    confirmPasswordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !nextBtn.disabled) {
-        this.presenter.handleNextButton(7);
-      }
-    });
-  }
-
-  // Password toggle functionality
-  if (passwordToggle && passwordInput) {
-    passwordToggle.addEventListener('click', () => {
-      this.togglePasswordVisibility(passwordInput, passwordToggle);
-    });
-  }
-
-  if (confirmPasswordToggle && confirmPasswordInput) {
-    confirmPasswordToggle.addEventListener('click', () => {
-      this.togglePasswordVisibility(confirmPasswordInput, confirmPasswordToggle);
-    });
-  }
-
-  // Focus pada username input
-  setTimeout(() => {
-    if (usernameInput) usernameInput.focus();
-  }, 100);
-}
-
-// Tambahkan helper method untuk password toggle
-togglePasswordVisibility(input, toggleBtn) {
-  const eyeIcon = toggleBtn.querySelector('.eye-icon');
-  
-  if (input.type === 'password') {
-    input.type = 'text';
-    eyeIcon.textContent = '🙈';
-    toggleBtn.setAttribute('aria-label', 'Sembunyikan password');
-  } else {
-    input.type = 'password';
-    eyeIcon.textContent = '👁️';
-    toggleBtn.setAttribute('aria-label', 'Tampilkan password');
-  }
-}
 
   showMessage(message, type = 'info') {
-    // Remove existing messages
     const existingMessages = document.querySelectorAll('.message');
     existingMessages.forEach(msg => msg.remove());
 
-    // Create new message
     const messageDiv = document.createElement('div');
     messageDiv.className = `message message-${type}`;
     messageDiv.textContent = message;
 
-    // Add styles
     Object.assign(messageDiv.style, {
       position: 'fixed',
       top: '20px',
@@ -777,7 +751,6 @@ togglePasswordVisibility(input, toggleBtn) {
       wordWrap: 'break-word'
     });
 
-    // Set background color based on type
     switch (type) {
       case 'success':
         messageDiv.style.backgroundColor = '#28a745';
@@ -795,7 +768,6 @@ togglePasswordVisibility(input, toggleBtn) {
 
     document.body.appendChild(messageDiv);
 
-    // Auto remove after 3 seconds
     setTimeout(() => {
       if (messageDiv.parentNode) {
         messageDiv.remove();
@@ -803,7 +775,6 @@ togglePasswordVisibility(input, toggleBtn) {
     }, 3000);
   }
 
-  // Navigation helper
   async reRender() {
     const container = document.querySelector('main') || document.querySelector('#app') || document.body;
     const newContent = await this.render();

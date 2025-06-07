@@ -1,12 +1,48 @@
+// home-page.js
+import HomePresenter from './home-presenter.js';
+import HomeModel from './home-model.js';
+
 export default class HomePage {
+  constructor() {
+    this.presenter = new HomePresenter(this);
+    this.model = new HomeModel();
+  }
+
   async render() {
+    // Check authentication status before rendering
+    if (!this.model.getToken()) {
+      return `
+        <div class="no-access-container">
+          <h1 class="no-access-title">No Access</h1>
+          <p class="no-access-message">Silakan login terlebih dahulu untuk mengakses halaman ini.</p>
+        </div>
+      `;
+    }
+
+    // Get user data
+    const userData = this.model.getUserData();
+    const userName = userData?.name || 'User';
+    const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+    // Get current date
+    const currentDate = new Date();
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
+    const currentMonth = monthNames[currentDate.getMonth()];
+    const currentDay = currentDate.getDate();
+    const currentDayName = dayNames[currentDate.getDay()];
+    const currentYear = currentDate.getFullYear();
+
+    // Render full UI for authenticated users
     return `
       <div class="home-container">
         <div class="home-header">
           <div class="profile-section">
-            <div class="profile-avatar">JD</div>
+            <div class="profile-avatar">${userInitials}</div>
             <div class="profile-info">
-              <div class="profile-name">John Doe</div>
+              <div class="profile-name">${userName}</div>
               <div class="profile-status">Ready to workout</div>
             </div>
           </div>
@@ -17,12 +53,13 @@ export default class HomePage {
             <button class="notification-btn">
               <i class="fas fa-bell"></i>
             </button>
+            <button class="btn btn-primary" id="logoutBtn">Logout</button>
           </div>
         </div>
 
         <div class="date-section">
-          <h1 class="date-title">Mei 24</h1>
-          <p class="date-subtitle">Sabtu, 31 Mei 2025</p>
+          <h1 class="date-title">${currentMonth} ${currentDay}</h1>
+          <p class="date-subtitle">${currentDayName}, ${currentDay} ${currentMonth} ${currentYear}</p>
         </div>
 
         <div class="dashboard">
@@ -93,7 +130,7 @@ export default class HomePage {
             <h3 class="daily-title">Hari 1 - Memulai Perjalanan</h3>
           </div>
           <p class="daily-description">
-            Selamat datang di program fitness Anda! Hari ini adalah langkah pertama menuju hidup yang lebih sehat. 
+            Selamat datang di program fitness Anda, ${userName}! Hari ini adalah langkah pertama menuju hidup yang lebih sehat. 
             Mari mulai dengan latihan ringan dan bangun kebiasaan positif yang akan bertahan lama.
           </p>
         </div>
@@ -106,12 +143,20 @@ export default class HomePage {
   }
 
   async afterRender() {
+    // Only initialize event listeners for authenticated users
+    if (this.model.getToken()) {
+      this.initializeEventListeners();
+    }
+    // Always check auth state to trigger redirect if needed
+    this.presenter.checkAuthState();
+  }
+
+  initializeEventListeners() {
     // Initialize notification button
     const notificationBtn = document.querySelector('.notification-btn');
     if (notificationBtn) {
       notificationBtn.addEventListener('click', () => {
-        // Handle notification click
-        console.log('Notification clicked');
+        this.showMessage('Notifikasi diklik', 'info');
       });
     }
 
@@ -119,8 +164,15 @@ export default class HomePage {
     const profileAvatar = document.querySelector('.profile-avatar');
     if (profileAvatar) {
       profileAvatar.addEventListener('click', () => {
-        // Handle profile click
-        console.log('Profile clicked');
+        this.showMessage('Profil diklik', 'info');
+      });
+    }
+
+    // Initialize logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        this.presenter.handleLogout();
       });
     }
 
@@ -131,5 +183,25 @@ export default class HomePage {
         progressFill.style.width = '0%'; // Update based on actual progress
       }
     }, 500);
+  }
+
+  showMessage(message, type = 'info') {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.message');
+    existingMessages.forEach(msg => msg.remove());
+
+    // Create and show new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${type}`;
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        messageDiv.remove();
+      }
+    }, 4000);
   }
 }

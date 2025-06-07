@@ -1,5 +1,8 @@
+import { registerUser } from '../../../data/api.js';
+
 export default class RegisterModel {
   constructor() {
+    // Form state only - NO localStorage
     this.registrationData = {
       name: '',
       country: '',
@@ -40,6 +43,7 @@ export default class RegisterModel {
 
     this.weeklyTargets = [
       { value: '0.25', label: 'Turun 0,25 kg per minggu' },
+      { value: '0.5', label: 'Turun 0,5 kg per minggu' },
       { value: '1', label: 'Turun 1 kg per minggu' }
     ];
 
@@ -77,11 +81,14 @@ export default class RegisterModel {
     ];
   }
 
-  // Data Management
+  // ================================
+  // DATA MANAGEMENT - In Memory Only
+  // ================================
+  
   setData(field, value) {
     if (this.registrationData.hasOwnProperty(field)) {
       this.registrationData[field] = value;
-      this.saveToStorage();
+      // NO localStorage save
     }
   }
 
@@ -91,7 +98,7 @@ export default class RegisterModel {
         this.registrationData[key] = data[key];
       }
     });
-    this.saveToStorage();
+    // NO localStorage save
   }
 
   getData() {
@@ -102,91 +109,167 @@ export default class RegisterModel {
     return this.registrationData[field];
   }
 
-  // Validation Methods
-validateField(field, value) {
-  const rules = this.validationRules[field];
-  if (!rules) return { valid: true };
+  // ================================
+  // VALIDATION METHODS
+  // ================================
 
-  if (rules.optional && (!value || value.trim() === '')) {
+  validateField(field, value) {
+    const rules = this.validationRules[field];
+    if (!rules) return { valid: true };
+
+    if (rules.optional && (!value || value.trim() === '')) {
+      return { valid: true };
+    }
+
+    if (!value || value.toString().trim() === '') {
+      return { valid: false, message: `${this.getFieldDisplayName(field)} tidak boleh kosong` };
+    }
+
+    if (rules.pattern && !rules.pattern.test(value)) {
+      return { valid: false, message: this.getPatternErrorMessage(field) };
+    }
+
+    const numValue = parseFloat(value);
+    
+    if (rules.min !== undefined && (field === 'password' || field === 'confirmPassword' || field === 'username' || field === 'name')) {
+      if (value.length < rules.min) {
+        return { valid: false, message: `${this.getFieldDisplayName(field)} minimal ${rules.min} karakter` };
+      }
+    } else if (rules.min !== undefined && numValue < rules.min) {
+      return { valid: false, message: `${this.getFieldDisplayName(field)} minimal ${rules.min}` };
+    }
+
+    if (rules.max !== undefined && (field === 'password' || field === 'confirmPassword' || field === 'username' || field === 'name')) {
+      if (value.length > rules.max) {
+        return { valid: false, message: `${this.getFieldDisplayName(field)} maksimal ${rules.max} karakter` };
+      }
+    } else if (rules.max !== undefined && numValue > rules.max) {
+      return { valid: false, message: `${this.getFieldDisplayName(field)} maksimal ${rules.max}` };
+    }
+
+    if (field === 'confirmPassword') {
+      const password = this.registrationData.password;
+      if (value !== password) {
+        return { valid: false, message: 'Konfirmasi password tidak sesuai' };
+      }
+    }
+
+    if (field === 'email') {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(value)) {
+        return { valid: false, message: 'Format email tidak valid' };
+      }
+    }
+
+    if (field === 'age') {
+      const age = parseInt(value);
+      if (isNaN(age)) {
+        return { valid: false, message: 'Usia harus berupa angka' };
+      }
+    }
+
+    if (field === 'currentWeight' || field === 'targetWeight') {
+      const weight = parseFloat(value);
+      if (isNaN(weight)) {
+        return { valid: false, message: 'Berat badan harus berupa angka' };
+      }
+    }
+
+    if (field === 'height') {
+      const height = parseFloat(value);
+      if (isNaN(height)) {
+        return { valid: false, message: 'Tinggi badan harus berupa angka' };
+      }
+    }
+
     return { valid: true };
   }
 
-  if (!value || value.toString().trim() === '') {
-    return { valid: false, message: `${this.getFieldDisplayName(field)} tidak boleh kosong` };
+  getFieldDisplayName(field) {
+    const displayNames = {
+      username: 'Username',
+      email: 'Email',
+      password: 'Password',
+      confirmPassword: 'Konfirmasi Password',
+      name: 'Nama',
+      age: 'Usia',
+      height: 'Tinggi badan',
+      currentWeight: 'Berat badan saat ini',
+      targetWeight: 'Target berat badan',
+      country: 'Negara',
+      gender: 'Jenis kelamin',
+      weeklyTarget: 'Target mingguan',
+      targetDeadline: 'Batas waktu target',
+      activityLevel: 'Tingkat aktivitas'
+    };
+    return displayNames[field] || field;
   }
 
-  if (rules.pattern && !rules.pattern.test(value)) {
-    return { valid: false, message: this.getPatternErrorMessage(field) };
+  getPatternErrorMessage(field) {
+    const messages = {
+      username: 'Username hanya boleh mengandung huruf, angka, dan underscore',
+      email: 'Format email tidak valid',
+      name: 'Nama hanya boleh mengandung huruf dan spasi'
+    };
+    return messages[field] || `Format ${field} tidak valid`;
   }
 
-  const numValue = parseFloat(value);
-  if (rules.min !== undefined && (field === 'password' || field === 'confirmPassword' || field === 'username')) {
-    if (value.length < rules.min) {
-      return { valid: false, message: `${this.getFieldDisplayName(field)} minimal ${rules.min} karakter` };
+  getStepFields(stepNumber) {
+    const stepFieldsMap = {
+      1: ['name'],
+      2: ['country', 'gender', 'age'],
+      3: ['height', 'currentWeight', 'targetWeight'],
+      4: ['weeklyTarget', 'targetDeadline'],
+      5: ['activityLevel'],
+      6: [],
+      7: ['username', 'email', 'password', 'confirmPassword']
+    };
+    return stepFieldsMap[stepNumber] || [];
+  }
+
+  validateStep(stepNumber) {
+    const stepFields = this.getStepFields(stepNumber);
+    const results = {};
+    let isValid = true;
+
+    stepFields.forEach(field => {
+      const value = this.registrationData[field];
+      const validation = this.validateField(field, value);
+      results[field] = validation;
+      if (!validation.valid) isValid = false;
+    });
+
+    if (stepNumber === 2) {
+      const requiredFields = ['country', 'gender', 'age'];
+      requiredFields.forEach(field => {
+        if (!this.registrationData[field]) {
+          results[field] = { valid: false, message: `${this.getFieldDisplayName(field)} harus dipilih` };
+          isValid = false;
+        }
+      });
     }
-  } else if (rules.min !== undefined && numValue < rules.min) {
-    return { valid: false, message: `${this.getFieldDisplayName(field)} minimal ${rules.min}` };
-  }
 
-  if (rules.max !== undefined && (field === 'password' || field === 'confirmPassword' || field === 'username')) {
-    if (value.length > rules.max) {
-      return { valid: false, message: `${this.getFieldDisplayName(field)} maksimal ${rules.max} karakter` };
+    if (stepNumber === 4) {
+      const deadline = this.registrationData.targetDeadline;
+      if (deadline) {
+        const selectedDate = new Date(deadline);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate <= today) {
+          results.targetDeadline = { valid: false, message: 'Batas waktu harus di masa depan' };
+          isValid = false;
+        }
+      }
     }
-  } else if (rules.max !== undefined && numValue > rules.max) {
-    return { valid: false, message: `${this.getFieldDisplayName(field)} maksimal ${rules.max}` };
+
+    return { valid: isValid, fieldResults: results };
   }
 
-  // Validasi khusus untuk confirm password
-  if (field === 'confirmPassword') {
-    const password = this.registrationData.password;
-    if (value !== password) {
-      return { valid: false, message: 'Konfirmasi password tidak sesuai' };
-    }
-  }
+  // ================================
+  // CALORIE CALCULATION
+  // ================================
 
-  return { valid: true };
-}
-
-getFieldDisplayName(field) {
-  const displayNames = {
-    username: 'Username',
-    email: 'Email',
-    password: 'Password',
-    confirmPassword: 'Konfirmasi Password',
-    name: 'Nama',
-    age: 'Usia',
-    height: 'Tinggi badan',
-    currentWeight: 'Berat badan',
-    targetWeight: 'Target berat badan'
-  };
-  return displayNames[field] || field;
-}
-
-getPatternErrorMessage(field) {
-  const messages = {
-    username: 'Username hanya boleh mengandung huruf, angka, dan underscore',
-    email: 'Format email tidak valid',
-    name: 'Nama hanya boleh mengandung huruf dan spasi'
-  };
-  return messages[field] || `Format ${field} tidak valid`;
-}
-
-getStepFields(stepNumber) {
-  const stepFieldsMap = {
-    1: ['name'],
-    2: ['country', 'gender', 'age'],
-    3: ['height', 'currentWeight', 'targetWeight'],
-    4: ['weeklyTarget', 'targetDeadline'],
-    5: ['activityLevel'],
-    6: [], // Step 6 tidak ada validasi field
-    7: ['username', 'email', 'password', 'confirmPassword']
-  };
-  return stepFieldsMap[stepNumber] || [];
-}
-
-
-  // Calorie Calculation
-  // Calorie Calculation - FIXED VERSION
   calculateCalories() {
     const weight = parseFloat(this.registrationData.currentWeight);
     const height = parseFloat(this.registrationData.height);
@@ -195,7 +278,13 @@ getStepFields(stepNumber) {
     const activityLevel = parseFloat(this.registrationData.activityLevel);
     const weeklyTarget = parseFloat(this.registrationData.weeklyTarget);
 
-    // ✅ BENAR: Mifflin-St Jeor Equation (bukan Harris-Benedict)
+    if (!weight || !height || !age || !gender || !activityLevel || !weeklyTarget) {
+      return {
+        error: true,
+        message: 'Data tidak lengkap untuk kalkulasi kalori'
+      };
+    }
+
     let bmr;
     if (gender === 'male') {
       bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
@@ -203,19 +292,13 @@ getStepFields(stepNumber) {
       bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
 
-    // Calculate TDEE
     const tdee = bmr * activityLevel;
-
-    // Calculate deficit (1 kg fat = 7700 calories)
     const weeklyDeficit = weeklyTarget * 7700;
     const dailyDeficit = weeklyDeficit / 7;
-
-    // Target calories with safety minimum
     const targetCalories = tdee - dailyDeficit;
     const minCalories = gender === 'male' ? 1500 : 1200;
     const safeTargetCalories = Math.max(targetCalories, minCalories);
 
-    // ✅ TAMBAHAN: Validasi untuk kasus ekstrem
     const warnings = [];
     if (weight < 40 || weight > 250) {
       warnings.push('Berat badan di luar rentang normal');
@@ -226,6 +309,18 @@ getStepFields(stepNumber) {
     if (dailyDeficit > 1000) {
       warnings.push('Target penurunan berat terlalu agresif');
     }
+    if (targetCalories < minCalories) {
+      warnings.push(`Target kalori disesuaikan ke minimum aman (${minCalories} kcal)`);
+    }
+
+    let estimatedWeeks = null;
+    if (this.registrationData.targetWeight) {
+      const targetWeight = parseFloat(this.registrationData.targetWeight);
+      const weightDifference = weight - targetWeight;
+      if (weightDifference > 0) {
+        estimatedWeeks = Math.ceil(weightDifference / weeklyTarget);
+      }
+    }
 
     return {
       bmr: Math.round(bmr),
@@ -234,77 +329,126 @@ getStepFields(stepNumber) {
       weeklyDeficit: Math.round(weeklyDeficit),
       dailyDeficit: Math.round(dailyDeficit),
       isMinimumCalories: targetCalories < minCalories,
-      warnings: warnings, // ✅ TAMBAHAN: Peringatan keamanan
-      equation: 'Mifflin-St Jeor', // ✅ TAMBAHAN: Info rumus yang digunakan
-      disclaimer: 'Hasil ini adalah estimasi. Konsultasi dengan ahli gizi untuk hasil yang lebih akurat.' // ✅ TAMBAHAN
+      warnings: warnings,
+      estimatedWeeks: estimatedWeeks,
+      equation: 'Mifflin-St Jeor',
+      disclaimer: 'Hasil ini adalah estimasi. Konsultasi dengan ahli gizi untuk hasil yang lebih akurat.'
     };
   }
 
-  // Storage Management
-  saveToStorage() {
-    try {
-      localStorage.setItem('registrationData', JSON.stringify(this.registrationData));
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-  }
+  // ================================
+  // API INTEGRATION
+  // ================================
 
-  loadFromStorage() {
-    try {
-      const data = localStorage.getItem('registrationData');
-      if (data) {
-        this.registrationData = { ...this.registrationData, ...JSON.parse(data) };
+  prepareRegistrationPayload() {
+    const data = this.getData();
+    
+    const requiredFields = ['name', 'country', 'gender', 'age', 'height', 'currentWeight', 
+                           'weeklyTarget', 'targetDeadline', 'activityLevel', 'username', 
+                           'email', 'password', 'confirmPassword'];
+    
+    for (const field of requiredFields) {
+      if (!data[field] || data[field].toString().trim() === '') {
+        throw new Error(`Field ${field} is required`);
       }
+    }
+    
+    return {
+      name: data.name.trim(),
+      country: data.country,
+      gender: data.gender,
+      age: parseInt(data.age),
+      height: parseFloat(data.height),
+      currentWeight: parseFloat(data.currentWeight),
+      targetWeight: data.targetWeight ? parseFloat(data.targetWeight) : null,
+      weeklyTarget: parseFloat(data.weeklyTarget),
+      targetDeadline: data.targetDeadline,
+      activityLevel: parseFloat(data.activityLevel),
+      username: data.username.trim(),
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+      confirmPassword: data.confirmPassword
+    };
+  }
+
+  async submitRegistration() {
+    try {
+      const payload = this.prepareRegistrationPayload();
+      console.log('Sending registration data:', { ...payload, password: '***', confirmPassword: '***' });
+      
+      const result = await registerUser(payload);
+      return result;
     } catch (error) {
-      console.error('Error loading from localStorage:', error);
+      console.error('Registration submission error:', error);
+      
+      if (error.message.includes('Field') && error.message.includes('is required')) {
+        return {
+          success: false,
+          message: 'Mohon lengkapi semua data yang diperlukan',
+          error: error
+        };
+      }
+      
+      return {
+        success: false,
+        message: 'Terjadi kesalahan saat memproses data',
+        error: error
+      };
     }
   }
 
- clearStorage() {
-  try {
-    localStorage.removeItem('registrationData');
-    this.registrationData = {
-      name: '',
-      country: '',
-      gender: '',
-      age: '',
-      targetWeight: '',
-      height: '',
-      currentWeight: '',
-      weeklyTarget: '',
-      targetDeadline: '',
-      activityLevel: '',
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    };
-  } catch (error) {
-    console.error('Error clearing localStorage:', error);
-  }
-}
-
-  // Complete Registration
-  completeRegistration() {
-    const results = this.calculateCalories();
-    const completeProfile = {
-      ...this.registrationData,
-      calories: results,
-      registrationComplete: true,
-      registrationDate: new Date().toISOString()
-    };
-
+  async completeRegistration() {
     try {
-      localStorage.setItem('userProfile', JSON.stringify(completeProfile));
-      this.clearStorage();
-      return true;
+      const finalValidation = this.validateAllSteps();
+      if (!finalValidation.valid) {
+        return {
+          success: false,
+          message: 'Data registrasi tidak lengkap atau tidak valid',
+          validationErrors: finalValidation.errors
+        };
+      }
+
+      const apiResult = await this.submitRegistration();
+      
+      if (!apiResult.success) {
+        return apiResult;
+      }
+
+      // NO localStorage save, directly return success
+      return {
+        success: true,
+        message: apiResult.message,
+        userData: apiResult.data
+      };
+      
     } catch (error) {
       console.error('Error completing registration:', error);
-      return false;
+      return {
+        success: false,
+        message: 'Terjadi kesalahan saat menyimpan data'
+      };
     }
   }
 
-  // Helper Methods
+  validateAllSteps() {
+    const errors = {};
+    let isValid = true;
+
+    for (let step = 1; step <= 7; step++) {
+      const stepValidation = this.validateStep(step);
+      if (!stepValidation.valid) {
+        errors[`step${step}`] = stepValidation.fieldResults;
+        isValid = false;
+      }
+    }
+
+    return { valid: isValid, errors };
+  }
+
+  // ================================
+  // HELPER METHODS
+  // ================================
+
   getCountries() {
     return this.countries;
   }
@@ -321,18 +465,48 @@ getStepFields(stepNumber) {
     return new Date().toISOString().split('T')[0];
   }
 
-  validateStep(stepNumber) {
-  const stepFields = this.getStepFields(stepNumber);
-  const results = {};
-  let isValid = true;
+  getMinDateString() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  }
 
-  stepFields.forEach(field => {
-    const value = this.registrationData[field];
-    const validation = this.validateField(field, value);
-    results[field] = validation;
-    if (!validation.valid) isValid = false;
-  });
+  // Reset form
+  resetForm() {
+    this.registrationData = {
+      name: '',
+      country: '',
+      gender: '',
+      age: '',
+      targetWeight: '',
+      height: '',
+      currentWeight: '',
+      weeklyTarget: '',
+      targetDeadline: '',
+      activityLevel: '',
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    };
+  }
 
-  return { valid: isValid, fieldResults: results };
-}
+  // Progress calculation
+  getRegistrationProgress() {
+    const totalSteps = 7;
+    let completedSteps = 0;
+
+    for (let step = 1; step <= totalSteps; step++) {
+      const validation = this.validateStep(step);
+      if (validation.valid) {
+        completedSteps++;
+      }
+    }
+
+    return {
+      completedSteps,
+      totalSteps,
+      percentage: Math.round((completedSteps / totalSteps) * 100)
+    };
+  }
 }

@@ -1,6 +1,8 @@
+import LoginPresenter from './login-presenter.js';
+
 export default class LoginPage {
   constructor() {
-    this.app = null; // Will be set by app instance if needed
+    this.presenter = new LoginPresenter(this);
   }
 
   async render() {
@@ -14,20 +16,25 @@ export default class LoginPage {
           <form id="loginForm" class="login-form">
             <div class="input-group">
               <label class="input-label">Alamat Email</label>
-              <input type="email" id="email" class="input-field" placeholder="" required>
+              <input type="email" id="email" class="input-field" placeholder="Masukkan email Anda" required>
               <div class="form-error">Mohon masukkan email yang valid</div>
             </div>
 
             <div class="input-group">
               <label class="input-label">Kata Sandi</label>
-              <input type="password" id="password" class="input-field" placeholder="" required>
+              <div class="password-container">
+                <input type="password" id="password" class="input-field" placeholder="Masukkan password" required>
+                <button type="button" class="password-toggle" id="togglePassword">
+                  <span class="eye-icon">👁️</span>
+                </button>
+              </div>
               <div class="form-error">Password minimal 6 karakter</div>
             </div>
 
             <div class="checkbox-container" id="termsContainer">
               <div class="checkbox" id="termsCheckbox"></div>
               <div class="checkbox-text">
-                Saya menyetujui <a href="#" id="termsLink">Syarat dan ketentuan</a> dan <a href="#" id="privacyLink">kebijakan Privasi</a> FittCall
+                Saya menyetujui <a href="#" id="termsLink">Syarat dan ketentuan</a> dan <a href="#" id="privacyLink">Kebijakan Privasi</a> FittCall
               </div>
             </div>
           </form>
@@ -37,7 +44,16 @@ export default class LoginPage {
           <button class="btn btn-back" id="backBtn">
             <span class="arrow-left">←</span>
           </button>
-          <button class="btn btn-primary" id="nextBtn" type="submit" form="loginForm">Berikutnya</button>
+          <button class="btn btn-primary" id="nextBtn" type="submit" form="loginForm">
+            <span class="btn-text">Berikutnya</span>
+            <span class="btn-loading">Loading...</span>
+          </button>
+        </div>
+
+        <!-- Additional Links -->
+        <div class="additional-links">
+          <p>Belum punya akun? <a href="#/register" id="registerLink">Daftar di sini</a></p>
+          <p><a href="#/forgot-password" id="forgotPasswordLink">Lupa password?</a></p>
         </div>
       </div>
     `;
@@ -45,21 +61,37 @@ export default class LoginPage {
 
   async afterRender() {
     this.initializeEventListeners();
-    this.checkAuthState();
-  }
-
-  checkAuthState() {
-    // Redirect if already logged in
-    if (localStorage.getItem('token')) {
-      this.showMessage('Anda sudah login', 'info');
-      setTimeout(() => {
-        window.location.hash = '/';
-      }, 1500);
-    }
+    this.presenter.checkAuthState();
+    this.focusFirstInput();
   }
 
   initializeEventListeners() {
     // Toggle checkbox
+    this.initializeCheckbox();
+    
+    // Form submission
+    this.initializeFormSubmission();
+    
+    // Back button
+    this.initializeBackButton();
+    
+    // Form validation
+    this.initializeFormValidation();
+    
+    // Password toggle
+    this.initializePasswordToggle();
+    
+    // Links
+    this.initializeLinks();
+    
+    // Keyboard shortcuts
+    this.initializeKeyboardShortcuts();
+    
+    // Initial validation
+    this.validateForm();
+  }
+
+  initializeCheckbox() {
     const termsContainer = document.getElementById('termsContainer');
     const checkbox = document.getElementById('termsCheckbox');
     
@@ -71,51 +103,142 @@ export default class LoginPage {
         }
       });
     }
+  }
 
-    // Form submission
+  initializeFormSubmission() {
     const form = document.getElementById('loginForm');
     if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.handleLogin();
+        this.handleSubmit();
       });
     }
+  }
 
-    // Back button
+  initializeBackButton() {
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
-        window.location.hash = '/';
+        // ✅ Jika user sudah login, tidak bisa kembali ke halaman awal
+        if (this.presenter.model.isAuthenticated()) {
+          this.showMessage('Anda sudah login. Silakan logout terlebih dahulu untuk kembali.', 'info');
+          setTimeout(() => {
+            window.location.hash = '/home';
+          }, 2000);
+        } else {
+          // Konfirmasi sebelum kembali jika ada input
+          const hasInput = this.hasFormInput();
+          if (hasInput) {
+            const confirmed = confirm('Data yang Anda masukkan akan hilang. Yakin ingin kembali?');
+            if (confirmed) {
+              window.location.hash = '/';
+            }
+          } else {
+            window.location.hash = '/';
+          }
+        }
       });
     }
+  }
 
-    // Form validation
+  initializeFormValidation() {
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     
     if (emailInput) {
       emailInput.addEventListener('input', () => this.validateForm());
       emailInput.addEventListener('blur', () => this.validateEmail());
+      emailInput.addEventListener('focus', () => this.clearFieldError('email'));
     }
     
     if (passwordInput) {
       passwordInput.addEventListener('input', () => this.validateForm());
       passwordInput.addEventListener('blur', () => this.validatePassword());
+      passwordInput.addEventListener('focus', () => this.clearFieldError('password'));
     }
+  }
 
-    // Prevent link clicks from toggling checkbox
+  initializePasswordToggle() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        const eyeIcon = togglePassword.querySelector('.eye-icon');
+        if (eyeIcon) {
+          eyeIcon.textContent = type === 'password' ? '👁️' : '🙈';
+        }
+      });
+    }
+  }
+
+  initializeLinks() {
+    // Prevent terms and privacy links from toggling checkbox
     const links = document.querySelectorAll('#termsLink, #privacyLink');
     links.forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Link clicked:', e.target.textContent);
-        // You can implement modal or redirect to terms page here
+        this.showMessage('Fitur ini akan segera tersedia', 'info');
       });
     });
 
-    // Initial validation
-    this.validateForm();
+    // Register link
+    const registerLink = document.getElementById('registerLink');
+    if (registerLink) {
+      registerLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.hash = '/register';
+      });
+    }
+
+    // Forgot password link
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+      forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.showMessage('Fitur reset password akan segera tersedia', 'info');
+      });
+    }
+  }
+
+  initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      // Enter key pada form
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.id === 'email' || activeElement.id === 'password')) {
+          e.preventDefault();
+          this.handleSubmit();
+        }
+      }
+      
+      // Escape key untuk clear form
+      if (e.key === 'Escape') {
+        this.clearForm();
+      }
+    });
+  }
+
+  handleSubmit() {
+    const email = document.getElementById('email')?.value?.trim();
+    const password = document.getElementById('password')?.value?.trim();
+    
+    // Validasi sebelum submit
+    if (!this.validateEmail() || !this.validatePassword()) {
+      this.showMessage('Mohon perbaiki data yang tidak valid', 'error');
+      return;
+    }
+    
+    if (!this.isTermsChecked()) {
+      this.showMessage('Mohon setujui syarat dan ketentuan terlebih dahulu', 'error');
+      return;
+    }
+    
+    this.presenter.handleLogin(email, password);
   }
 
   validateEmail() {
@@ -124,7 +247,7 @@ export default class LoginPage {
     const email = emailInput?.value?.trim() || '';
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValid = emailRegex.test(email);
+    const isValid = email === '' || emailRegex.test(email);
     
     if (emailGroup) {
       if (email && !isValid) {
@@ -141,15 +264,15 @@ export default class LoginPage {
       }
     }
     
-    return isValid;
+    return email === '' || isValid;
   }
 
   validatePassword() {
     const passwordInput = document.getElementById('password');
-    const passwordGroup = passwordInput?.parentElement;
+    const passwordGroup = passwordInput?.parentElement?.parentElement || passwordInput?.parentElement;
     const password = passwordInput?.value?.trim() || '';
     
-    const isValid = password.length >= 6;
+    const isValid = password === '' || password.length >= 6;
     
     if (passwordGroup) {
       if (password && !isValid) {
@@ -166,110 +289,85 @@ export default class LoginPage {
       }
     }
     
-    return isValid;
+    return password === '' || isValid;
   }
 
   validateForm() {
     const email = document.getElementById('email')?.value?.trim() || '';
     const password = document.getElementById('password')?.value?.trim() || '';
-    const isTermsChecked = document.getElementById('termsCheckbox')?.classList.contains('checked') || false;
+    const isTermsChecked = this.isTermsChecked();
     const nextBtn = document.getElementById('nextBtn');
 
-    const emailValid = this.validateEmail();
-    const passwordValid = this.validatePassword();
-    const isValid = email && password && isTermsChecked && emailValid && passwordValid;
+    const emailValid = email && this.validateEmail() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const passwordValid = password && this.validatePassword() && password.length >= 6;
+    const isValid = emailValid && passwordValid && isTermsChecked;
     
     if (nextBtn) {
       nextBtn.disabled = !isValid;
-      nextBtn.style.opacity = isValid ? '1' : '0.5';
+      nextBtn.style.opacity = isValid ? '1' : '0.6';
+      nextBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
     }
-  }
-
-async handleLogin() {
-  const email = document.getElementById('email')?.value?.trim();
-  const password = document.getElementById('password')?.value?.trim();
-
-  if (!email || !password) {
-    this.showMessage('Mohon lengkapi semua field', 'error');
-    return;
-  }
-
-  // Final validation
-  if (!this.validateEmail() || !this.validatePassword()) {
-    this.showMessage('Mohon perbaiki data yang tidak valid', 'error');
-    return;
-  }
-
-  try {
-    // Show loading state - FIXED
-    const nextBtn = document.getElementById('nextBtn');
-    const originalText = nextBtn?.textContent || 'Berikutnya';
     
-    if (nextBtn) {
-      nextBtn.classList.add('loading');
-      nextBtn.disabled = true;
-      // Don't change text content when using CSS loading spinner
-      // nextBtn.textContent = 'Loading...'; // Remove this line
-    }
+    return isValid;
+  }
 
-    // Simulate API call
-    const response = await this.loginUser(email, password);
+  isTermsChecked() {
+    return document.getElementById('termsCheckbox')?.classList.contains('checked') || false;
+  }
+
+  clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const fieldGroup = field?.parentElement?.parentElement || field?.parentElement;
     
-    if (response.success) {
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token || 'mock-token-' + Date.now());
-      
-      // Show success message
-      this.showMessage('Login berhasil! Mengalihkan...', 'success');
-      
-      // Redirect after short delay
-      setTimeout(() => {
-        window.location.hash = '/';
-      }, 1500);
-    } else {
-      this.showMessage(response.message || 'Login gagal. Silakan coba lagi.', 'error');
+    if (fieldGroup) {
+      fieldGroup.classList.remove('error');
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    this.showMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');
-  } finally {
-    // Restore button state - FIXED
-    const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-      nextBtn.classList.remove('loading');
-      nextBtn.textContent = 'Berikutnya'; // Restore original text
-      this.validateForm(); // Re-validate to set proper disabled state
+    
+    if (field) {
+      field.classList.remove('invalid');
     }
   }
-}
 
-  async loginUser(email, password) {
-    // Simulate API call with Promise
-    return new Promise((resolve) => {
+  hasFormInput() {
+    const email = document.getElementById('email')?.value?.trim() || '';
+    const password = document.getElementById('password')?.value?.trim() || '';
+    return email.length > 0 || password.length > 0;
+  }
+
+  clearForm() {
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const checkbox = document.getElementById('termsCheckbox');
+    
+    if (emailInput) {
+      emailInput.value = '';
+      emailInput.classList.remove('valid', 'invalid');
+    }
+    
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.classList.remove('valid', 'invalid');
+      passwordInput.type = 'password';
+    }
+    
+    if (checkbox) {
+      checkbox.classList.remove('checked');
+    }
+    
+    // Clear all error states
+    const errorGroups = document.querySelectorAll('.input-group.error');
+    errorGroups.forEach(group => group.classList.remove('error'));
+    
+    this.validateForm();
+  }
+
+  focusFirstInput() {
+    const emailInput = document.getElementById('email');
+    if (emailInput && !this.presenter.model.isAuthenticated()) {
       setTimeout(() => {
-        // Mock authentication logic
-        if (email && password.length >= 6) {
-          resolve({
-            success: true,
-            user: {
-              id: Math.floor(Math.random() * 1000),
-              email: email,
-              name: email.split('@')[0] || 'User',
-              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=007AFF&color=fff`
-            },
-            token: 'mock-jwt-token-' + Date.now()
-          });
-        } else {
-          resolve({
-            success: false,
-            message: password.length < 6 
-              ? 'Password minimal 6 karakter' 
-              : 'Email atau password tidak valid'
-          });
-        }
-      }, 1500); // Simulate network delay
-    });
+        emailInput.focus();
+      }, 100);
+    }
   }
 
   showMessage(message, type = 'info') {
@@ -280,9 +378,18 @@ async handleLogin() {
     // Create and show new message
     const messageDiv = document.createElement('div');
     messageDiv.className = `message message-${type}`;
-    messageDiv.textContent = message;
+    messageDiv.innerHTML = `
+      <span class="message-text">${message}</span>
+      <button class="message-close" onclick="this.parentElement.remove()">×</button>
+    `;
     
-    document.body.appendChild(messageDiv);
+    // Insert at top of container
+    const container = document.querySelector('.login-container');
+    if (container) {
+      container.insertBefore(messageDiv, container.firstChild);
+    } else {
+      document.body.appendChild(messageDiv);
+    }
     
     // Auto remove after 4 seconds
     setTimeout(() => {
@@ -290,5 +397,51 @@ async handleLogin() {
         messageDiv.remove();
       }
     }, 4000);
+
+    // Scroll to top to show message
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  showLoading(isLoading) {
+    const nextBtn = document.getElementById('nextBtn');
+    const btnText = nextBtn?.querySelector('.btn-text');
+    const btnLoading = nextBtn?.querySelector('.btn-loading');
+    
+    if (nextBtn) {
+      if (isLoading) {
+        nextBtn.classList.add('loading');
+        nextBtn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'inline';
+      } else {
+        nextBtn.classList.remove('loading');
+        nextBtn.disabled = false;
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoading) btnLoading.style.display = 'none';
+        this.validateForm();
+      }
+    }
+  }
+
+  // Method untuk handle resize window
+  handleResize() {
+    // Adjust layout jika diperlukan
+    const container = document.querySelector('.login-container');
+    if (container && window.innerHeight < 600) {
+      container.classList.add('compact-mode');
+    } else if (container) {
+      container.classList.remove('compact-mode');
+    }
+  }
+
+  // Clean up event listeners saat component di-destroy
+  destroy() {
+    // Remove global event listeners
+    document.removeEventListener('keydown', this.keydownHandler);
+    window.removeEventListener('resize', this.resizeHandler);
+    
+    // Clear any remaining timeouts
+    const messages = document.querySelectorAll('.message');
+    messages.forEach(msg => msg.remove());
   }
 }

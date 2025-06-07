@@ -9,9 +9,6 @@ const routes = {
   '/landing': new LandingPage(),
   '/login': new LoginPage(),
   '/register': new RegisterPage(),
-  // Tambahkan route untuk handle query parameter
-  '/register?step=1': new RegisterPage(),
-  '/register?step=2': new RegisterPage(),
 };
 
 export default routes;
