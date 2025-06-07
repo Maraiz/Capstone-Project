@@ -1,4 +1,5 @@
 GET http://localhost:5000/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hQGdtYWlsLmNvbSIsImlhdCI6MTc0OTI4NDU0MSwiZXhwIjoxNzQ5Mjg1NDQxfQ.TNoBMLWJSTM1OIXwIZAJMtUs_PbY4g7b33xrEuTzZz8
 
 ###
 POST  http://localhost:5000/users
@@ -29,8 +30,23 @@ Content-Type: application/json
     // "targetCalories": 2000,
     
     // Step 7 - Account
-    "username": "maulana123",
-    "email": "maulana@gmail.com", 
-    "password": "12345678",
-    "confirmPassword": "12345678"
+    "username": "maulana12345",
+    "email": "maulana123@gmail.com", 
+    "password": "123456789",
+    "confirmPassword": "123456789"
 }
+
+###
+POST  http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "email": "maulana@gmail.com",
+    "password": "12345678"
+}
+
+###
+GET http://localhost:5000/token
+
+###
+DELETE  http://localhost:5000/logout

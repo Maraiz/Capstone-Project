@@ -8,7 +8,7 @@ import '../styles/register.css'; // Tambahkan ini
 import '../styles/landing.css'; 
 import '../styles/home.css';
 
-import App from './pages/app';
+import App from './pages/app.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const app = new App({

@@ -1,10 +1,14 @@
 import Users from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
+import jwt from 'jsonwebtoken';
+
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await Users.findAll();
+        const users = await Users.findAll({
+            attributes:['id', 'name', 'email']
+        });
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -168,4 +172,106 @@ function calculateCalories({ height, currentWeight, age, gender, activityLevel, 
     const minCalories = gender === 'male' ? 1500 : 1200;
     
     return Math.max(Math.round(targetCalories), minCalories);
+}
+
+export const Login = async (req, res) => {
+    const { email, password } = req.body;
+    
+    // Validasi input
+    if (!email || !password) {
+        return res.status(400).json({ msg: "Email dan password harus diisi" });
+    }
+    
+    try {
+        // Fix 1: Gunakan Users (sesuai import) dan findOne
+        const user = await Users.findOne({
+            where: {
+                email: email
+            }
+        });
+        
+        // Fix 2: Cek apakah user ditemukan
+        if (!user) {
+            return res.status(404).json({msg: "Email tidak ditemukan"});
+        }
+        
+        // Fix 3: Langsung akses user.password (tanpa [0])
+        const match = await bcrypt.compare(password, user.password);
+        if(!match) return res.status(400).json({msg: "Password salah"});
+        
+        // Fix 4: Langsung akses properti (tanpa [0])
+        const userId = user.id;
+        const name = user.name;
+        const userEmail = user.email;
+        
+        const accessToken = jwt.sign(
+            { userId, name, email: userEmail }, 
+            process.env.ACCESS_TOKEN_SECRET, 
+            { expiresIn: '15s' } // Perpanjang dari 15s
+        );
+        
+        const refreshToken = jwt.sign(
+            { userId, name, email: userEmail }, 
+            process.env.REFRESH_TOKEN_SECRET, 
+            { expiresIn: '1d' }
+        );
+        
+        // Update refresh token
+        await Users.update(
+            { refresh_token: refreshToken }, 
+            { where: { id: userId } }
+        );
+        
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000
+        });
+        
+        res.json({
+            msg: "Login berhasil",
+            accessToken,
+            user: {
+                id: userId,
+                name: name,
+                email: userEmail
+            }
+        });
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({msg: "Server error"});
+    }
+}
+
+export const Logout = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) return res.sendStatus(204); // No Content
+    
+    try {
+        // ✅ Fix 1: Gunakan Users dan findOne()
+        const user = await Users.findOne({
+            where: {
+                refresh_token: refreshToken
+            }
+        });
+        
+        // ✅ Fix 2: Cek user dengan benar
+        if (!user) return res.sendStatus(204);
+        
+        // ✅ Fix 3: Langsung akses user.id (tanpa [0])
+        const userId = user.id;
+        
+        // ✅ Fix 4: Gunakan Users konsisten
+        await Users.update(
+            { refresh_token: null }, 
+            { where: { id: userId } }
+        );
+        
+        res.clearCookie('refreshToken');
+        res.json({ msg: "Logout berhasil" });
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ msg: "Server error" });
+    }
 }

@@ -1,5 +1,5 @@
-import routes from '../routes/routes';
-import { getActiveRoute } from '../routes/url-parser';
+import routes from '../routes/routes.js';
+import { getActiveRoute } from '../routes/url-parser.js';
 
 class App {
   #content = null;
