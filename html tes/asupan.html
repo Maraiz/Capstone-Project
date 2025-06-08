@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitCall - Fitness Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: 
+                linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.7) 100%),
+                url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 0 8px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .profile-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #4a5fff, #6b73ff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 24px;
+            width: fit-content;
+            box-shadow: 0 4px 12px rgba(74, 95, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #3a4fee, #5b63ff);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(74, 95, 255, 0.4);
+        }
+
+        .date-section {
+            margin-bottom: 32px;
+        }
+
+        .date-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .calendar-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+        }
+
+        .calories-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+
+        .progress-ring {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #4caf50 0deg, #4caf50 270deg, rgba(255,255,255,0.1) 270deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-ring::before {
+            content: '';
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            position: absolute;
+        }
+
+        .progress-text {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .progress-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nutrition-stats {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+            min-width: 60px;
+        }
+
+        .stat-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .protein-fill { background: linear-gradient(90deg, #ff9800, #f57c00); }
+        .fat-fill { background: linear-gradient(90deg, #e91e63, #c2185b); }
+        .carbs-fill { background: linear-gradient(90deg, #2196f3, #1976d2); }
+
+        .stat-value {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 60px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .recently-card {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(78, 205, 196, 0.2) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            height: auto;
+            min-height: 300px;
+        }
+
+        .recently-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: 30px 30px;
+            opacity: 0.2;
+        }
+
+        .recently-content {
+            position: relative;
+            z-index: 1;
+            padding: 16px;
+        }
+
+        .recently-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .no-meals {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .meal-suggestion {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 24px;
+        }
+
+        .instagram-link {
+            color: #4a5fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .meal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .meal-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meal-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .meal-info {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .meal-nutrition {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .meal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .meal-action-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+
+        .meal-action-btn:hover {
+            color: #4a5fff;
+        }
+
+        .camera-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        .camera-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #f8e7eb;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: left;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .modal-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .modal-option:hover {
+            background: #f0d6dc;
+        }
+
+        .modal-option i {
+            font-size: 20px;
+        }
+
+        .camera-preview {
+            display: none;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .capture-button {
+            background: linear-gradient(135deg, #4a5fff, #6b73ff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .capture-button:hover {
+            background: linear-gradient(135deg, #3a4fee, #5b63ff);
+            transform: translateY(-1px);
+        }
+
+        .preview-image {
+            display: none;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .edit-modal-content {
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .edit-modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #e0e0e0;
+            text-transform: capitalize;
+        }
+
+        .edit-modal-content .modal-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .edit-modal-content .modal-field:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .edit-modal-content .modal-field .label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #b0b0b0;
+            min-width: 100px;
+            text-align: left;
+        }
+
+        .edit-modal-content .modal-field .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #2a2a2a;
+            width: 120px;
+            text-align: center;
+        }
+
+        .edit-modal-content .modal-field .portion-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .edit-modal-content .modal-field .portion-controls button {
+            background: #333;
+            border: none;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .edit-modal-content .modal-field .portion-controls button:hover {
+            background: #444;
+            transform: translateY(-1px);
+        }
+
+        .edit-modal-content .modal-field .portion-controls span {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            width: 40px;
+            text-align: center;
+        }
+
+        .edit-modal-content .submit-btn {
+            background: linear-gradient(135deg, #00aaff, #0077ff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 170, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .edit-modal-content .submit-btn:hover {
+            background: linear-gradient(135deg, #0099e6, #0066cc);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 170, 255, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding: 24px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-title {
+                font-size: 36px;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .header {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .circular-progress {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .progress-ring {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .progress-ring::before {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .progress-number {
+                font-size: 28px;
+            }
+
+            .modal-content {
+                width: 90%;
+            }
+
+            .edit-modal-content {
+                width: 90%;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .date-title {
+                font-size: 28px;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .circular-progress {
+                width: 120px;
+                height: 120px;
+            }
+
+            .progress-ring {
+                width: 120px;
+                height: 120px;
+            }
+
+            .progress-ring::before {
+                width: 96px;
+                height: 96px;
+            }
+
+            .progress-number {
+                font-size: 24px;
+            }
+
+            .modal-content {
+                padding: 12px;
+                width: 90%;
+            }
+
+            .edit-modal-content {
+                width: 90%;
+                padding: 16px;
+            }
+
+            .edit-modal-content .modal-field .value {
+                width: 100px;
+            }
+
+            .edit-modal-content .modal-field .portion-controls span {
+                width: 30px;
+                padding: 6px 8px;
+            }
+        }
+
+        /* Flatpickr custom styles */
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        .flatpickr-day {
+            color: #ffffff;
+        }
+
+        .flatpickr-day:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .flatpickr-day.selected {
+            background: #4a5fff;
+            border-color: #4a5fff;
+        }
+
+        .flatpickr-day.today {
+            border-color: #4ecdc4;
+        }
+
+        .flatpickr-month, .flatpickr-current-month {
+            color: #000000;
+        }
+
+        .flatpickr-weekdays {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flatpickr-weekday {
+            color: #ffffff;
+        }
+
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            color: #ffffff;
+            fill: #ffffff;
+        }
+
+        .flatpickr-prev-month:hover,
+        .flatpickr-next-month:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="profile-section">
+                <div class="profile-avatar">👨</div>
+                <div class="profile-info">
+                    <div class="profile-name">John Doe</div>
+                    <div class="profile-status">Ready to workout</div>
+                </div>
+            </div>
+            
+            <div class="logo">FitCall</div>
+            
+            <div class="header-actions">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+        </header>
+
+        <button class="back-button">
+            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+            Back
+        </button>
+
+        <div class="date-section">
+            <h1 class="date-title">
+                <span id="selected-date"></span>
+                <div class="calendar-icon" id="calendar-btn">
+                    <i class="fas fa-calendar"></i>
+                </div>
+            </h1>
+            <input type="hidden" id="date-picker">
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Kalori Hari Ini</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                </div>
+                
+                <div class="calories-content">
+                    <div class="circular-progress">
+                        <div class="progress-ring">
+                            <div class="progress-text">
+                                <div class="progress-number" id="calories-remaining">1444</div>
+                                <div class="progress-label">kkal tersisa</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nutrition-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Protein</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill protein-fill"></div>
+                            </div>
+                            <span class="stat-value" id="protein-stats">0/108g</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Lemak</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill fat-fill"></div>
+                            </div>
+                            <span class="stat-value" id="fat-stats">0/48g</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Carbs</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill carbs-fill"></div>
+                            </div>
+                            <span class="stat-value" id="carbs-stats">0/144g</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card recently-card">
+                <div class="recently-content">
+                    <h3 class="recently-title">Recently</h3>
+                    <div id="no-meals" class="no-meals">No meals yet!</div>
+                    <p id="meal-suggestion" class="meal-suggestion">
+                        ambil sesuatu yang lezat, catat di sini,<br>
+                        dan periksa instagram kami <a href="#" class="instagram-link">@fitcal.ai</a>
+                    </p>
+                    <div id="meal-list" class="meal-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="footer-text">© 2025 FitCall Gym. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <button class="camera-button">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <div class="modal" id="addMealModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">×</button>
+            <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
+            <img id="previewImage" class="preview-image" alt="Captured or selected image">
+            <button class="capture-button" id="capturePhoto" style="display: none;">Ambil Foto</button>
+            <button class="capture-button" id="addMeal" style="display: none;">Tambah Makanan</button>
+            <input type="file" id="galleryInput" class="file-input" accept="image/*">
+            <div class="modal-option" id="cameraOption"><i class="fas fa-camera"></i> Camera</div>
+            <div class="modal-option" id="galleryOption"><i class="fas fa-images"></i> Album</div>
+            <div class="modal-option"><i class="fas fa-pen"></i> Describe food</div>
+            <div class="modal-option"><i class="fas fa-heart"></i> Favorite</div>
+        </div>
+    </div>
+
+    <div class="modal" id="editMealModal">
+        <div class="edit-modal-content">
+            <button class="modal-close" id="closeEditModal">×</button>
+            <h2 id="edit-meal-name"></h2>
+            <div class="modal-field">
+                <span class="label">Calories</span>
+                <span class="value" id="edit-calories"></span>
+            </div>
+            <div class="modal-field">
+                <span class="label">Protein</span>
+                <span class="value" id="edit-protein"></span> <span class="value">g</span>
+            </div>
+            <div class="modal-field">
+                <span class="label">Lemak</span>
+                <span class="value" id="edit-fat"></span> <span class="value">g</span>
+            </div>
+            <div class="modal-field">
+                <span class="label">Carbs</span>
+                <span class="value" id="edit-carbs"></span> <span class="value">g</span>
+            </div>
+            <div class="modal-field">
+                <span class="label">Portions</span>
+                <div class="portion-controls">
+                    <button onclick="changePortion(-1)">-</button>
+                    <span id="edit-portions">1</span>
+                    <button onclick="changePortion(1)">+</button>
+                </div>
+            </div>
+            <div class="modal-field">
+                <span class="label">Heart Score</span>
+                <span class="value" id="edit-heart-score"></span>
+            </div>
+            <button class="submit-btn" id="saveEdit">Submit</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Function to format date in Indonesian (e.g., "Juni 7")
+        function formatDate(date) {
+            const months = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            return `${months[date.getMonth()]} ${date.getDate()}`;
+        }
+
+        // Initialize nutrition data
+        let nutritionData = {
+            calories: 0,
+            protein: 0,
+            fat: 0,
+            carbs: 0,
+            maxCalories: 2000,
+            maxProtein: 108,
+            maxFat: 48,
+            maxCarbs: 144
+        };
+
+        // Load meals from localStorage
+        let meals = JSON.parse(localStorage.getItem('meals')) || [];
+
+        // Function to generate random nutrition values
+        function getRandomNutrition() {
+            return {
+                calories: Math.floor(Math.random() * 300) + 100, // 100-400 kcal
+                protein: Math.floor(Math.random() * 20) + 5,     // 5-25g
+                fat: Math.floor(Math.random() * 15) + 5,         // 5-20g
+                carbs: Math.floor(Math.random() * 40) + 10       // 10-50g
+            };
+        }
+
+        // Function to update nutrition stats
+        function updateNutritionStats() {
+            const caloriesRemaining = nutritionData.maxCalories - nutritionData.calories;
+            document.getElementById('calories-remaining').textContent = caloriesRemaining;
+            document.getElementById('protein-stats').textContent = `${nutritionData.protein}/${nutritionData.maxProtein}g`;
+            document.getElementById('fat-stats').textContent = `${nutritionData.fat}/${nutritionData.maxFat}g`;
+            document.getElementById('carbs-stats').textContent = `${nutritionData.carbs}/${nutritionData.maxCarbs}g`;
+
+            const proteinPercentage = (nutritionData.protein / nutritionData.maxProtein) * 100;
+            const fatPercentage = (nutritionData.fat / nutritionData.maxFat) * 100;
+            const carbsPercentage = (nutritionData.carbs / nutritionData.maxCarbs) * 100;
+
+            document.querySelector('.protein-fill').style.width = `${proteinPercentage}%`;
+            document.querySelector('.fat-fill').style.width = `${fatPercentage}%`;
+            document.querySelector('.carbs-fill').style.width = `${carbsPercentage}%`;
+
+            const caloriesAngle = (nutritionData.calories / nutritionData.maxCalories) * 360;
+            document.querySelector('.progress-ring').style.background = `conic-gradient(from 0deg, #4caf50 0deg, #4caf50 ${caloriesAngle}deg, rgba(255,255,255,0.1) ${caloriesAngle}deg)`;
+        }
+
+        // Function to update recently card
+        function updateRecentlyCard() {
+            const mealList = document.getElementById('meal-list');
+            const noMeals = document.getElementById('no-meals');
+            const mealSuggestion = document.getElementById('meal-suggestion');
+
+            if (meals.length === 0) {
+                noMeals.style.display = 'block';
+                mealSuggestion.style.display = 'block';
+                mealList.innerHTML = '';
+            } else {
+                noMeals.style.display = 'none';
+                mealSuggestion.style.display = 'none';
+                mealList.innerHTML = '';
+
+                meals.forEach(meal => {
+                    const mealItem = document.createElement('div');
+                    mealItem.className = 'meal-item';
+                    mealItem.innerHTML = `
+                        <img src="${meal.image}" class="meal-image" alt="${meal.name}">
+                        <div class="meal-info">
+                            <div class="meal-name">${meal.name}</div>
+                            <div class="meal-nutrition">${meal.calories} kkal, ${meal.protein}g protein, ${meal.fat}g lemak, ${meal.carbs}g karbo</div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" onclick="editMeal(${meal.id})"><i class="fas fa-edit"></i></button>
+                            <button class="meal-action-btn" onclick="deleteMeal(${meal.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    mealList.appendChild(mealItem);
+                });
+            }
+        }
+
+        // Function to delete meal
+        function deleteMeal(mealId) {
+            const mealIndex = meals.findIndex(meal => meal.id === mealId);
+            if (mealIndex !== -1) {
+                const deletedMeal = meals[mealIndex];
+                nutritionData.calories -= deletedMeal.calories * deletedMeal.portions;
+                nutritionData.protein -= deletedMeal.protein * deletedMeal.portions;
+                nutritionData.fat -= deletedMeal.fat * deletedMeal.portions;
+                nutritionData.carbs -= deletedMeal.carbs * deletedMeal.portions;
+                meals.splice(mealIndex, 1);
+                localStorage.setItem('meals', JSON.stringify(meals));
+                updateRecentlyCard();
+                updateNutritionStats();
+                alert('Makanan telah dihapus!');
+            }
+        }
+
+        // Function to edit meal
+        function editMeal(mealId) {
+            const meal = meals.find(meal => meal.id === mealId);
+            if (meal) {
+                document.getElementById('edit-meal-name').textContent = meal.name;
+                document.getElementById('edit-calories').textContent = meal.calories;
+                document.getElementById('edit-protein').textContent = meal.protein;
+                document.getElementById('edit-fat').textContent = meal.fat;
+                document.getElementById('edit-carbs').textContent = meal.carbs;
+                document.getElementById('edit-portions').textContent = meal.portions;
+                document.getElementById('edit-heart-score').textContent = meal.heartScore || 5;
+
+                const editModal = document.getElementById('editMealModal');
+                editModal.style.display = 'flex';
+                window.currentEditingMealId = mealId;
+            }
+        }
+
+        // Function to change portions
+        function changePortion(delta) {
+            let portions = parseInt(document.getElementById('edit-portions').textContent);
+            portions = Math.max(1, portions + delta);
+            document.getElementById('edit-portions').textContent = portions;
+        }
+
+        // Set initial date to today (June 7, 2025)
+        const today = new Date('2025-06-07 11:36');
+        document.getElementById('selected-date').textContent = formatDate(today);
+
+        // Initialize Flatpickr
+        const datePicker = flatpickr('#date-picker', {
+            dateFormat: "F j",
+            defaultDate: today,
+            onChange: function(selectedDates, dateStr) {
+                document.getElementById('selected-date').textContent = dateStr;
+            },
+            locale: {
+                months: {
+                    shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                    longhand: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+                }
+            }
+        });
+
+        // Open date picker on calendar icon click
+        document.getElementById('calendar-btn').addEventListener('click', function() {
+            datePicker.toggle();
+        });
+
+        // Modal and media functionality
+        const addMealModal = document.getElementById('addMealModal');
+        const cameraButton = document.querySelector('.camera-button');
+        const closeModal = document.getElementById('closeModal');
+        const cameraOption = document.getElementById('cameraOption');
+        const galleryOption = document.getElementById('galleryOption');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const captureButton = document.getElementById('capturePhoto');
+        const addMealButton = document.getElementById('addMeal');
+        const galleryInput = document.getElementById('galleryInput');
+        const previewImage = document.getElementById('previewImage');
+
+        let stream = null;
+        let currentImage = null;
+
+        // Open modal
+        cameraButton.addEventListener('click', function() {
+            addMealModal.style.display = 'flex';
+        });
+
+        // Close add meal modal and stop camera
+        closeModal.addEventListener('click', function() {
+            stopCamera();
+            resetModal();
+            addMealModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === addMealModal) {
+                stopCamera();
+                resetModal();
+                addMealModal.style.display = 'none';
+            }
+            if (event.target === document.getElementById('editMealModal')) {
+                document.getElementById('editMealModal').style.display = 'none';
+            }
+        });
+
+        // Start camera
+        cameraOption.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                cameraPreview.srcObject = stream;
+                cameraPreview.style.display = 'block';
+                captureButton.style.display = 'block';
+                addMealButton.style.display = 'none';
+                previewImage.style.display = 'none';
+                galleryInput.value = '';
+            } catch (error) {
+                alert('Tidak dapat mengakses kamera: ' + error.message);
+            }
+        });
+
+        // Capture photo
+        captureButton.addEventListener('click', function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraPreview.videoWidth;
+            canvas.height = cameraPreview.videoHeight;
+            canvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+            currentImage = canvas.toDataURL('image/jpeg');
+            previewImage.src = currentImage;
+            previewImage.style.display = 'block';
+            cameraPreview.style.display = 'none';
+            captureButton.style.display = 'none';
+            addMealButton.style.display = 'block';
+            stopCamera();
+        });
+
+        // Select from gallery
+        galleryOption.addEventListener('click', function() {
+            galleryInput.click();
+        });
+
+        galleryInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImage = e.target.result;
+                    previewImage.src = currentImage;
+                    previewImage.style.display = 'block';
+                    cameraPreview.style.display = 'none';
+                    captureButton.style.display = 'none';
+                    addMealButton.style.display = 'block';
+                    stopCamera();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Add meal
+        addMealButton.addEventListener('click', function() {
+            if (currentImage) {
+                const randomNutrition = getRandomNutrition();
+                const newMeal = {
+                    id: Date.now(),
+                    name: `Makanan ${meals.length + 1}`,
+                    image: currentImage,
+                    calories: randomNutrition.calories,
+                    protein: randomNutrition.protein,
+                    fat: randomNutrition.fat,
+                    carbs: randomNutrition.carbs,
+                    portions: 1,
+                    heartScore: 5
+                };
+
+                nutritionData.calories += newMeal.calories * newMeal.portions;
+                nutritionData.protein += newMeal.protein * newMeal.portions;
+                nutritionData.fat += newMeal.fat * newMeal.portions;
+                nutritionData.carbs += newMeal.carbs * newMeal.portions;
+
+                meals.push(newMeal);
+                localStorage.setItem('meals', JSON.stringify(meals));
+                updateRecentlyCard();
+                updateNutritionStats();
+                stopCamera();
+                resetModal();
+                addMealModal.style.display = 'none';
+                alert('Makanan telah ditambahkan!');
+            } else {
+                alert('Silakan ambil foto atau pilih gambar terlebih dahulu.');
+            }
+        });
+
+        // Save edited meal (only portions)
+        document.getElementById('saveEdit').addEventListener('click', function() {
+            const mealId = window.currentEditingMealId;
+            const mealIndex = meals.findIndex(meal => meal.id === mealId);
+            if (mealIndex !== -1) {
+                const oldMeal = meals[mealIndex];
+                const newPortions = parseInt(document.getElementById('edit-portions').textContent) || 1;
+
+                // Adjust nutrition data based on portion change
+                const portionDiff = newPortions - oldMeal.portions;
+                nutritionData.calories += oldMeal.calories * portionDiff;
+                nutritionData.protein += oldMeal.protein * portionDiff;
+                nutritionData.fat += oldMeal.fat * portionDiff;
+                nutritionData.carbs += oldMeal.carbs * portionDiff;
+
+                meals[mealIndex] = {
+                    ...meals[mealIndex],
+                    portions: newPortions
+                };
+                localStorage.setItem('meals', JSON.stringify(meals));
+                updateRecentlyCard();
+                updateNutritionStats();
+                document.getElementById('editMealModal').style.display = 'none';
+                alert('Porsi makanan telah diperbarui!');
+            }
+        });
+
+        // Close edit modal
+        document.getElementById('closeEditModal').addEventListener('click', function() {
+            document.getElementById('editMealModal').style.display = 'none';
+        });
+
+        // Stop camera stream
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        // Reset modal state
+        function resetModal() {
+            cameraPreview.style.display = 'none';
+            captureButton.style.display = 'none';
+            addMealButton.style.display = 'none';
+            previewImage.style.display = 'none';
+            galleryInput.value = '';
+            currentImage = null;
+        }
+
+        // Initialize UI
+        updateRecentlyCard();
+        updateNutritionStats();
+
+        // Add interactive effects
+        document.querySelector('.back-button').addEventListener('click', function() {
+            alert('Kembali ke halaman sebelumnya');
+        });
+
+        document.querySelector('.notification-btn').addEventListener('click', function() {
+            alert('Tidak ada notifikasi baru');
+        });
+    </script>
+</body>
+</html>
