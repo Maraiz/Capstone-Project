@@ -15,7 +15,6 @@ export default class HomePage {
   }
 
   async render() {
-    // Check authentication status before rendering
     if (!this.model.getToken()) {
       return `
         <div class="no-access-container">
@@ -25,10 +24,8 @@ export default class HomePage {
       `;
     }
 
-    // Get user data from API
     const userData = await this.model.getUserData();
-    
-    // Handle if user data fetch fails
+
     if (!userData) {
       return `
         <div class="error-container">
@@ -52,21 +49,16 @@ export default class HomePage {
 
     const userName = userData?.name || 'User';
     const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-
-    // Format displayed date
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    
+
     const currentMonth = monthNames[this.currentDate.getMonth()];
     const currentDay = this.currentDate.getDate();
     const currentDayName = dayNames[this.currentDate.getDay()];
     const currentYear = this.currentDate.getFullYear();
-
-    // Get target calories from user data
     const targetCalories = userData?.targetCalories || 500;
 
-    // Render full UI for authenticated users
     return `
       <div class="home-container">
         <div class="home-header">
@@ -186,7 +178,7 @@ export default class HomePage {
       <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
           <div class="modal-header">
-            <h3 class="modal-title">Add Meal</h3>
+            <h3 class="modal-title">Tambah Latihan</h3>
             <button class="close-btn" id="closeModalBtn">
               <i class="fas fa-times"></i>
             </button>
@@ -197,19 +189,19 @@ export default class HomePage {
                 <div class="modal-option-icon camera">
                   <i class="fas fa-camera"></i>
                 </div>
-                <div class="modal-option-text">Camera</div>
+                <div class="modal-option-text">Kamera</div>
               </div>
               <div class="modal-option" id="galleryOption">
                 <div class="modal-option-icon album">
                   <i class="fas fa-images"></i>
                 </div>
-                <div class="modal-option-text">Album</div>
+                <div class="modal-option-text">Galeri</div>
               </div>
               <div class="modal-option" id="favoriteOption">
                 <div class="modal-option-icon favorite">
                   <i class="fas fa-heart"></i>
                 </div>
-                <div class="modal-option-text">Favorite</div>
+                <div class="modal-option-text">Favorit</div>
               </div>
             </div>
           </div>
@@ -220,7 +212,7 @@ export default class HomePage {
       <div class="modal-overlay" id="cameraModalOverlay">
         <div class="camera-modal">
           <div class="modal-header">
-            <h3 class="modal-title">Capture Meal</h3>
+            <h3 class="modal-title">Ambil Gambar Latihan</h3>
             <button class="close-btn" id="closeCameraModalBtn">
               <i class="fas fa-times"></i>
             </button>
@@ -234,8 +226,8 @@ export default class HomePage {
               <option value="minutes">Menit</option>
             </select>
             <input type="number" id="mealDuration" placeholder="Durasi (min. 10 detik)" min="10" step="1">
-            <button id="captureBtn">Capture</button>
-            <button id="saveMealBtn">Save</button>
+            <button id="captureBtn">Ambil Gambar</button>
+            <button id="saveMealBtn">Simpan</button>
           </div>
         </div>
       </div>
@@ -244,7 +236,7 @@ export default class HomePage {
       <div class="modal-overlay" id="galleryModalOverlay">
         <div class="camera-modal">
           <div class="modal-header">
-            <h3 class="modal-title">Select from Gallery</h3>
+            <h3 class="modal-title">Pilih dari Galeri</h3>
             <button class="close-btn" id="closeGalleryModalBtn">
               <i class="fas fa-times"></i>
             </button>
@@ -257,7 +249,7 @@ export default class HomePage {
               <option value="minutes">Menit</option>
             </select>
             <input type="number" id="galleryMealDuration" placeholder="Durasi (min. 10 detik)" min="10" step="1">
-            <button id="saveGalleryMealBtn">Save</button>
+            <button id="saveGalleryMealBtn">Simpan</button>
           </div>
         </div>
       </div>
@@ -286,7 +278,7 @@ export default class HomePage {
           <div class="loading-indicator" id="loadingIndicator"></div>
           <div class="timer" id="exerciseTimer">00:00</div>
           <button class="start-btn" id="startBtn">|| Jeda</button>
-          <div class="completed-status" id="completedStatus">Completed</div>
+          <div class="completed-status" id="completedStatus">Selesai</div>
           <div class="prep-message" id="prepMessage"></div>
         </div>
       </div>
@@ -294,27 +286,21 @@ export default class HomePage {
   }
 
   async afterRender() {
-    // Only initialize event listeners for authenticated users
     if (this.model.getToken()) {
-      // Set target calories to model before updating display
       const userData = await this.model.getUserData();
       if (userData) {
         const targetCalories = userData?.targetCalories || 500;
         this.presenter.setTargetCalories(targetCalories);
       }
-      
       this.initializeEventListeners();
-      // Initialize calories display
       this.presenter.updateCaloriesDisplay();
       // Update date display to ensure it reflects currentDate
       this.updateDateDisplay();
     }
-    // Always check auth state to trigger redirect if needed
     this.presenter.checkAuthState();
   }
 
   initializeEventListeners() {
-    // Existing event listeners
     const notificationBtn = document.querySelector('.notification-btn');
     if (notificationBtn) {
       notificationBtn.addEventListener('click', () => {
@@ -360,13 +346,11 @@ export default class HomePage {
       });
     }
 
-    // Modal and other button event listeners
     this.initializeModalEventListeners();
     this.initializeCameraEventListeners();
     this.initializeGalleryEventListeners();
     this.initializeExerciseEventListeners();
 
-    // Keyboard shortcuts
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
         this.closeAllModals();
@@ -376,8 +360,16 @@ export default class HomePage {
         this.navigateToNextDate();
       }
     });
+
+    setTimeout(() => {
+      const progressFill = document.querySelector('.progress-fill');
+      if (progressFill) {
+        progressFill.style.width = '0%';
+      }
+    }, 500);
   }
 
+  // Date Navigation Methods
   navigateToPreviousDate() {
     const prevDate = new Date(this.currentDate);
     prevDate.setDate(this.currentDate.getDate() - 1);
@@ -386,11 +378,11 @@ export default class HomePage {
     if (prevDate >= this.firstActivityDate) {
       this.currentDate = prevDate;
       this.updateDateDisplay();
-      this.showMessage('Navigated to previous date', 'info');
+      this.showMessage('Navigasi ke hari sebelumnya', 'info');
       // Refresh meal list for the selected date
-      this.updateMealList(this.model.getMeals()); // Fixed: Call updateMealList on HomePage instance
+      this.presenter.updateCaloriesDisplay();
     } else {
-      this.showMessage('Cannot navigate before your first activity', 'info');
+      this.showMessage('Tidak dapat navigasi sebelum aktivitas pertama', 'warning');
     }
   }
 
@@ -402,11 +394,11 @@ export default class HomePage {
     if (nextDate <= this.todayDate) {
       this.currentDate = nextDate;
       this.updateDateDisplay();
-      this.showMessage('Navigated to next date', 'info');
+      this.showMessage('Navigasi ke hari berikutnya', 'info');
       // Refresh meal list for the selected date
-      this.updateMealList(this.model.getMeals()); // Fixed: Call updateMealList on HomePage instance
+      this.presenter.updateCaloriesDisplay();
     } else {
-      this.showMessage('Cannot navigate beyond today', 'info');
+      this.showMessage('Tidak dapat navigasi melewati hari ini', 'warning');
     }
   }
 
@@ -436,14 +428,27 @@ export default class HomePage {
 
     if (prevDateBtn) {
       prevDateBtn.disabled = this.currentDate <= this.firstActivityDate;
+      if (this.currentDate <= this.firstActivityDate) {
+        prevDateBtn.style.opacity = '0.5';
+        prevDateBtn.style.cursor = 'not-allowed';
+      } else {
+        prevDateBtn.style.opacity = '1';
+        prevDateBtn.style.cursor = 'pointer';
+      }
     }
     if (nextDateBtn) {
       nextDateBtn.disabled = this.currentDate >= this.todayDate;
+      if (this.currentDate >= this.todayDate) {
+        nextDateBtn.style.opacity = '0.5';
+        nextDateBtn.style.cursor = 'not-allowed';
+      } else {
+        nextDateBtn.style.opacity = '1';
+        nextDateBtn.style.cursor = 'pointer';
+      }
     }
   }
 
   initializeModalEventListeners() {
-    // Add button event listener
     const addBtn = document.getElementById('addBtn');
     if (addBtn) {
       addBtn.addEventListener('click', () => {
@@ -451,10 +456,9 @@ export default class HomePage {
       });
     }
 
-    // Main modal event listeners
     const modalOverlay = document.getElementById('modalOverlay');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    
+
     if (modalOverlay) {
       modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
@@ -469,7 +473,6 @@ export default class HomePage {
       });
     }
 
-    // Modal option event listeners
     const cameraOption = document.getElementById('cameraOption');
     const galleryOption = document.getElementById('galleryOption');
     const favoriteOption = document.getElementById('favoriteOption');
@@ -493,94 +496,134 @@ export default class HomePage {
     }
   }
 
-  initializeCameraEventListeners() {
-    const cameraModalOverlay = document.getElementById('cameraModalOverlay');
-    const closeCameraModalBtn = document.getElementById('closeCameraModalBtn');
-    const captureBtn = document.getElementById('captureBtn');
-    const saveMealBtn = document.getElementById('saveMealBtn');
+initializeCameraEventListeners() {
+  const cameraModalOverlay = document.getElementById('cameraModalOverlay');
+  const closeCameraModalBtn = document.getElementById('closeCameraModalBtn');
+  const captureBtn = document.getElementById('captureBtn');
+  const saveMealBtn = document.getElementById('saveMealBtn');
 
-    if (cameraModalOverlay) {
-      cameraModalOverlay.addEventListener('click', (e) => {
-        if (e.target === cameraModalOverlay) {
-          this.closeCameraModal();
-        }
-      });
-    }
-
-    if (closeCameraModalBtn) {
-      closeCameraModalBtn.addEventListener('click', () => {
+  if (cameraModalOverlay) {
+    cameraModalOverlay.addEventListener('click', (e) => {
+      if (e.target === cameraModalOverlay) {
         this.closeCameraModal();
-      });
-    }
-
-    if (captureBtn) {
-      captureBtn.addEventListener('click', () => {
-        this.captureImage();
-      });
-    }
-
-    if (saveMealBtn) {
-      saveMealBtn.addEventListener('click', async () => {
-        const duration = parseInt(document.getElementById('mealDuration').value) || 0;
-        const unit = document.getElementById('durationUnit').value;
-        const capturedImage = document.getElementById('capturedImage');
-        
-        const success = await this.presenter.handleCameraCapture(duration, unit, capturedImage.src);
-        if (success) {
-          this.closeCameraModal();
-        }
-      });
-    }
+      }
+    });
   }
 
-  initializeGalleryEventListeners() {
-    const galleryModalOverlay = document.getElementById('galleryModalOverlay');
-    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
-    const saveGalleryMealBtn = document.getElementById('saveGalleryMealBtn');
-    const galleryInput = document.getElementById('galleryInput');
+  if (closeCameraModalBtn) {
+    closeCameraModalBtn.addEventListener('click', () => {
+      this.closeCameraModal();
+    });
+  }
 
-    if (galleryModalOverlay) {
-      galleryModalOverlay.addEventListener('click', (e) => {
-        if (e.target === galleryModalOverlay) {
-          this.closeGalleryModal();
-        }
-      });
-    }
+  if (captureBtn) {
+    captureBtn.addEventListener('click', () => {
+      this.captureImage();
+    });
+  }
 
-    if (closeGalleryModalBtn) {
-      closeGalleryModalBtn.addEventListener('click', () => {
+  if (saveMealBtn) {
+    saveMealBtn.addEventListener('click', () => {
+      const duration = parseInt(document.getElementById('mealDuration').value) || 0;
+      const unit = document.getElementById('durationUnit').value;
+      const capturedImage = document.getElementById('capturedImage');
+
+      // Validasi lebih ketat
+      const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+      if (!capturedImage.src || capturedImage.src === '' || capturedImage.src === 'data:,') {
+        this.showMessage('Silakan ambil gambar terlebih dahulu!', 'error');
+        return;
+      }
+      
+      if (durationInSeconds < 10) {
+        this.showMessage('Durasi minimal 10 detik!', 'error');
+        return;
+      }
+
+      // Debug: log gambar
+      console.log('Saving camera image:', capturedImage.src.substring(0, 100) + '...');
+
+      // Simpan referensi gambar sebelum tutup modal
+      const imageDataToSave = capturedImage.src;
+
+      // Langsung tutup modal
+      this.closeCameraModal();
+      this.closeModal();
+
+      // Baru jalankan proses dengan gambar yang sudah disimpan
+      this.presenter.handleCameraCapture(duration, unit, imageDataToSave);
+    });
+  }
+}
+
+initializeGalleryEventListeners() {
+  const galleryModalOverlay = document.getElementById('galleryModalOverlay');
+  const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
+  const saveGalleryMealBtn = document.getElementById('saveGalleryMealBtn');
+  const galleryInput = document.getElementById('galleryInput');
+
+  if (galleryModalOverlay) {
+    galleryModalOverlay.addEventListener('click', (e) => {
+      if (e.target === galleryModalOverlay) {
         this.closeGalleryModal();
-      });
-    }
-
-    if (galleryInput) {
-      galleryInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const galleryPreview = document.getElementById('galleryPreview');
-            galleryPreview.src = e.target.result;
-            galleryPreview.style.display = 'block';
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
-
-    if (saveGalleryMealBtn) {
-      saveGalleryMealBtn.addEventListener('click', async () => {
-        const duration = parseInt(document.getElementById('galleryMealDuration').value) || 0;
-        const unit = document.getElementById('galleryDurationUnit').value;
-        const galleryPreview = document.getElementById('galleryPreview');
-        
-        const success = await this.presenter.handleGalleryUpload(duration, unit, galleryPreview.src);
-        if (success) {
-          this.closeGalleryModal();
-        }
-      });
-    }
+      }
+    });
   }
+
+  if (closeGalleryModalBtn) {
+    closeGalleryModalBtn.addEventListener('click', () => {
+      this.closeGalleryModal();
+    });
+  }
+
+  if (galleryInput) {
+    galleryInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const galleryPreview = document.getElementById('galleryPreview');
+          galleryPreview.src = e.target.result;
+          galleryPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (saveGalleryMealBtn) {
+    saveGalleryMealBtn.addEventListener('click', () => {
+      const duration = parseInt(document.getElementById('galleryMealDuration').value) || 0;
+      const unit = document.getElementById('galleryDurationUnit').value;
+      const galleryPreview = document.getElementById('galleryPreview');
+
+      // Validasi lebih ketat
+      const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+      if (!galleryPreview.src || galleryPreview.src === '' || galleryPreview.src === 'data:,') {
+        this.showMessage('Silakan pilih gambar terlebih dahulu!', 'error');
+        return;
+      }
+      
+      if (durationInSeconds < 10) {
+        this.showMessage('Durasi minimal 10 detik!', 'error');
+        return;
+      }
+
+      // Debug: log gambar
+      console.log('Saving gallery image:', galleryPreview.src.substring(0, 100) + '...');
+
+      // Simpan referensi gambar sebelum tutup modal
+      const imageDataToSave = galleryPreview.src;
+
+      // Langsung tutup modal
+      this.closeGalleryModal();
+      this.closeModal();
+
+      // Baru jalankan proses dengan gambar yang sudah disimpan
+      this.presenter.handleGalleryUpload(duration, unit, imageDataToSave);
+    });
+  }
+}
 
   initializeExerciseEventListeners() {
     const exerciseModalOverlay = document.getElementById('exerciseModalOverlay');
@@ -655,12 +698,11 @@ export default class HomePage {
     }
   }
 
-  // Modal operations
   openModal() {
     const modalOverlay = document.getElementById('modalOverlay');
     if (modalOverlay) {
       modalOverlay.classList.add('active');
-      document.body.classList.add('overflow-hidden');
+      document.body.style.overflow = 'hidden';
     }
   }
 
@@ -668,7 +710,7 @@ export default class HomePage {
     const modalOverlay = document.getElementById('modalOverlay');
     if (modalOverlay) {
       modalOverlay.classList.remove('active');
-      document.body.classList.remove('overflow-hidden');
+      document.body.style.overflow = 'auto';
     }
   }
 
@@ -677,19 +719,19 @@ export default class HomePage {
     const cameraModalOverlay = document.getElementById('cameraModalOverlay');
     if (cameraModalOverlay) {
       cameraModalOverlay.classList.add('active');
-      document.body.classList.add('overflow-hidden');
-    }
+      document.body.style.overflow = 'hidden';
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.getElementById('cameraPreview');
-      video.srcObject = stream;
-      video.style.display = 'block';
-      this.cameraStream = stream;
-    } catch (err) {
-      console.error('Error accessing camera:', err);
-      this.showMessage('Could not access camera. Please check permissions.', 'error');
-      this.closeCameraModal();
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById('cameraPreview');
+        video.srcObject = stream;
+        video.style.display = 'block';
+        this.cameraStream = stream;
+      } catch (err) {
+        console.error('Error accessing camera:', err);
+        this.showMessage('Tidak dapat mengakses kamera. Periksa izin kamera.', 'error');
+        this.closeCameraModal();
+      }
     }
   }
 
@@ -697,7 +739,7 @@ export default class HomePage {
     const cameraModalOverlay = document.getElementById('cameraModalOverlay');
     if (cameraModalOverlay) {
       cameraModalOverlay.classList.remove('active');
-      document.body.classList.remove('overflow-hidden');
+      document.body.style.overflow = 'auto';
 
       if (this.cameraStream) {
         this.cameraStream.getTracks().forEach(track => track.stop());
@@ -720,7 +762,6 @@ export default class HomePage {
         captureBtn.style.display = 'block';
       }
 
-      // Reset form fields
       document.getElementById('mealDuration').value = '10';
       document.getElementById('durationUnit').value = 'seconds';
     }
@@ -754,7 +795,7 @@ export default class HomePage {
     const galleryModalOverlay = document.getElementById('galleryModalOverlay');
     if (galleryModalOverlay) {
       galleryModalOverlay.classList.add('active');
-      document.body.classList.add('overflow-hidden');
+      document.body.style.overflow = 'hidden';
     }
   }
 
@@ -762,9 +803,8 @@ export default class HomePage {
     const galleryModalOverlay = document.getElementById('galleryModalOverlay');
     if (galleryModalOverlay) {
       galleryModalOverlay.classList.remove('active');
-      document.body.classList.remove('overflow-hidden');
+      document.body.style.overflow = 'auto';
 
-      // Reset form fields
       document.getElementById('galleryInput').value = '';
       document.getElementById('galleryPreview').src = '';
       document.getElementById('galleryPreview').style.display = 'none';
@@ -784,7 +824,6 @@ export default class HomePage {
     const durationCounter = document.getElementById('durationCounter');
     const completedStatus = document.getElementById('completedStatus');
 
-    // Reset modal state
     this.resetExerciseModalState();
 
     if (title) title.textContent = meal.name.toUpperCase();
@@ -804,7 +843,7 @@ export default class HomePage {
 
     if (modal) {
       modal.classList.add('active');
-      document.body.classList.add('overflow-hidden');
+      document.body.style.overflow = 'hidden';
     }
   }
 
@@ -812,7 +851,7 @@ export default class HomePage {
     const modal = document.getElementById('exerciseModalOverlay');
     if (modal) {
       modal.classList.remove('active');
-      document.body.classList.remove('overflow-hidden');
+      document.body.style.overflow = 'auto';
     }
     this.presenter.cleanup();
   }
@@ -848,26 +887,43 @@ export default class HomePage {
   }
 
   selectOption(option) {
-    this.showMessage(`${option} option selected`, 'info');
+    this.showMessage(`${option} dipilih`, 'info');
     this.closeModal();
   }
 
-  // Update methods called by presenter
-  updateMealList(meals) {
-    const mealList = document.getElementById('meal-list');
-    const noMeals = document.getElementById('no-meals');
-    const mealSuggestion = document.getElementById('meal-suggestion');
+updateMealList(meals) {
+  const mealList = document.getElementById('meal-list');
+  const noMeals = document.getElementById('no-meals');
+  const mealSuggestion = document.getElementById('meal-suggestion');
 
-    if (meals.length > 0) {
-      if (noMeals) noMeals.style.display = 'none';
-      if (mealSuggestion) mealSuggestion.style.display = 'none';
-      if (mealList) {
-        mealList.innerHTML = '';
+  if (meals.length > 0) {
+    if (noMeals) noMeals.style.display = 'none';
+    if (mealSuggestion) mealSuggestion.style.display = 'none';
+    if (mealList) {
+      mealList.innerHTML = '';
 
-        meals.forEach(meal => {
-          const mealItem = document.createElement('div');
-          mealItem.className = 'meal-item';
-          mealItem.setAttribute('data-meal-id', meal.id);
+      meals.forEach(meal => {
+        const mealItem = document.createElement('div');
+        mealItem.className = `meal-item ${meal.analyzing ? 'analyzing analyzing-pulse' : ''}`;
+        mealItem.setAttribute('data-meal-id', meal.id);
+        
+        // Different HTML for analyzing state
+        if (meal.analyzing) {
+          mealItem.innerHTML = `
+            <img src="${meal.image}" class="meal-image">
+            <div class="meal-info">
+              <div class="meal-name analyzing-text">Analyzing<span class="analyzing-dots"></span></div>
+              <div class="meal-nutrition">Sedang menganalisis gambar...</div>
+              <div class="analyzing-progress">
+                <div class="analyzing-progress-bar"></div>
+              </div>
+            </div>
+            <div class="analyzing-status">
+              <div class="analyzing-spinner"></div>
+              <span>Processing</span>
+            </div>
+          `;
+        } else {
           mealItem.innerHTML = `
             <img src="${meal.image}" class="meal-image">
             <div class="meal-info">
@@ -881,38 +937,37 @@ export default class HomePage {
               </button>
             </div>
           `;
-          
-          // Add event listeners for meal item and delete button
+
+          // Only add event listeners for non-analyzing meals
           mealItem.addEventListener('click', (e) => {
-            // If not clicking delete button, open exercise modal
             if (!e.target.closest('.delete-meal-btn')) {
               this.openExerciseModal(meal);
             }
           });
 
-          // Add event listener for delete button
           const deleteBtn = mealItem.querySelector('.delete-meal-btn');
           if (deleteBtn) {
             deleteBtn.addEventListener('click', (e) => {
-              e.stopPropagation(); // Prevent meal item click
+              e.stopPropagation();
               this.handleDeleteMeal(meal.id);
             });
           }
+        }
 
-          mealList.appendChild(mealItem);
-        });
-      }
-    } else {
-      if (noMeals) noMeals.style.display = 'block';
-      if (mealSuggestion) mealSuggestion.style.display = 'block';
-      if (mealList) mealList.innerHTML = '';
+        mealList.appendChild(mealItem);
+      });
     }
+  } else {
+    if (noMeals) noMeals.style.display = 'block';
+    if (mealSuggestion) mealSuggestion.style.display = 'block';
+    if (mealList) mealList.innerHTML = '';
   }
+}
 
   updateCaloriesDisplay(totalBurned) {
     const targetCalories = this.presenter.getTargetCalories();
     const caloriesRemaining = targetCalories - totalBurned;
-    
+
     const calorieProgress = document.getElementById('calorieProgress');
     const caloriesBurned = document.getElementById('caloriesBurned');
     const progressRing = document.querySelector('.progress-ring');
@@ -1011,7 +1066,6 @@ export default class HomePage {
     }
   }
 
-  // Global method for deleting meal (called from inline onclick)
   handleDeleteMeal(id) {
     this.presenter.handleDeleteMeal(id);
   }
@@ -1023,16 +1077,15 @@ export default class HomePage {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message message-${type}`;
     messageDiv.textContent = message;
-    
+
     document.body.appendChild(messageDiv);
-    
+
     setTimeout(() => {
       if (messageDiv.parentNode) {
-        messageDiv.parentNode.removeChild(messageDiv);
+        messageDiv.remove();
       }
     }, 4000);
   }
 }
 
-// Make homePage globally accessible for inline event handlers
 window.homePage = null;

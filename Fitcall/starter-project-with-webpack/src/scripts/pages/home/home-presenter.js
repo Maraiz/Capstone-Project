@@ -1,5 +1,5 @@
-// home-presenter.js
 import HomeModel from './home-model.js';
+import { predictImage } from '../../data/api.js';
 
 export default class HomePresenter {
   constructor(view) {
@@ -27,14 +27,14 @@ export default class HomePresenter {
   }
 
   // Meal operations
-  async handleAddMeal(mealData) {
+  async handleAddMeal(mealData, predictedName) {
     try {
-      const meal = this.model.addMeal(mealData);
+      const meal = this.model.addMeal({ ...mealData, name: predictedName });
       this.view.updateMealList(this.model.getMeals());
-      this.view.showMessage('Exercise added successfully!', 'success');
+      this.view.showMessage(`Latihan ${predictedName} berhasil ditambahkan!`, 'success');
       return meal;
     } catch (error) {
-      this.view.showMessage('Failed to add exercise', 'error');
+      this.view.showMessage('Gagal menambahkan latihan', 'error');
       console.error('Error adding meal:', error);
     }
   }
@@ -45,10 +45,10 @@ export default class HomePresenter {
       if (deletedMeal) {
         this.updateCaloriesDisplay();
         this.view.updateMealList(this.model.getMeals());
-        this.view.showMessage('Exercise deleted', 'info');
+        this.view.showMessage('Latihan dihapus', 'info');
       }
     } catch (error) {
-      this.view.showMessage('Failed to delete exercise', 'error');
+      this.view.showMessage('Gagal menghapus latihan', 'error');
       console.error('Error deleting meal:', error);
     }
   }
@@ -104,7 +104,7 @@ export default class HomePresenter {
       if (completedMeal) {
         this.updateCaloriesDisplay();
         this.view.updateMealList(this.model.getMeals());
-        this.view.showMessage('Exercise completed!', 'success');
+        this.view.showMessage('Latihan selesai!', 'success');
       }
     }
     this.cleanup();
@@ -121,7 +121,7 @@ export default class HomePresenter {
       
       this.model.updateMeal(selectedMeal.id, updates);
       this.view.updateMealList(this.model.getMeals());
-      this.view.showMessage('Exercise saved!', 'success');
+      this.view.showMessage('Latihan disimpan!', 'success');
     }
     this.cleanup();
   }
@@ -152,40 +152,108 @@ export default class HomePresenter {
     this.timeLeft = 0;
   }
 
-  // Camera operations
-  async handleCameraCapture(duration, unit, imageSrc) {
+  // Camera operations - langsung tutup modal
+  handleCameraCapture(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+
+    // Simpan gambar dulu ke variable lokal
+    const imageData = imageSrc;
     
-    if (!imageSrc || durationInSeconds < 10) {
-      this.view.showMessage('Please capture an image and enter a valid duration (minimum 10 seconds).', 'error');
-      return false;
-    }
+    console.log('Camera capture - Image data length:', imageData.length);
+    console.log('Camera capture - Duration:', durationInSeconds);
 
-    const mealData = {
+    // Show analyzing state immediately dengan gambar yang sudah disimpan
+    const analyzingMeal = this.model.addAnalyzingMeal({
       duration: durationInSeconds,
-      image: imageSrc
-    };
+      image: imageData  // Pastikan gambar tersimpan
+    });
+    
+    this.view.updateMealList(this.model.getMeals());
+    this.view.showMessage('📸 Gambar disimpan! Sedang menganalisis...', 'info');
 
-    await this.handleAddMeal(mealData);
-    return true;
+    // Start background prediction dengan delay kecil
+    setTimeout(() => {
+      this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
+    }, 500);
   }
 
-  // Gallery operations  
-  async handleGalleryUpload(duration, unit, imageSrc) {
+  // Gallery operations - langsung tutup modal
+  handleGalleryUpload(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+
+    // Simpan gambar dulu ke variable lokal
+    const imageData = imageSrc;
     
-    if (!imageSrc || durationInSeconds < 10) {
-      this.view.showMessage('Please select an image and enter a valid duration (minimum 10 seconds).', 'error');
-      return false;
+    console.log('Gallery upload - Image data length:', imageData.length);
+    console.log('Gallery upload - Duration:', durationInSeconds);
+
+    // Show analyzing state immediately dengan gambar yang sudah disimpan
+    const analyzingMeal = this.model.addAnalyzingMeal({
+      duration: durationInSeconds,
+      image: imageData  // Pastikan gambar tersimpan
+    });
+    
+    this.view.updateMealList(this.model.getMeals());
+    this.view.showMessage('🖼️ Gambar disimpan! Sedang menganalisis...', 'info');
+
+    // Start background prediction dengan delay kecil
+    setTimeout(() => {
+      this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
+    }, 500);
+  }
+
+  // Background processing method
+  processImagePrediction(imageSrc, analyzingMeal, durationInSeconds) {
+    console.log('Starting prediction process...');
+    console.log('Image source length:', imageSrc ? imageSrc.length : 'No image');
+    
+    // Validasi gambar masih ada
+    if (!imageSrc || imageSrc.length < 100) {
+      console.error('Image data lost or invalid');
+      this.model.deleteMeal(analyzingMeal.id);
+      this.view.updateMealList(this.model.getMeals());
+      this.view.showMessage('❌ Data gambar hilang', 'error');
+      return;
     }
 
-    const mealData = {
-      duration: durationInSeconds,
-      image: imageSrc
-    };
+    fetch(imageSrc)
+      .then(response => {
+        console.log('Fetch response status:', response.status);
+        return response.blob();
+      })
+      .then(blob => {
+        console.log('Blob size:', blob.size);
+        const imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+        console.log('Created file:', imageFile.name, imageFile.size);
+        return predictImage(imageFile);
+      })
+      .then(prediction => {
+        console.log('Prediction result:', prediction);
+        
+        if (!prediction.success) {
+          throw new Error(prediction.message);
+        }
 
-    await this.handleAddMeal(mealData);
-    return true;
+        const predictedName = prediction.data?.predicted_class
+          ? prediction.data.predicted_class.replace(/\b\w/g, c => c.toUpperCase())
+          : this.model.getRandomMealName();
+
+        const updates = {
+          name: predictedName,
+          calories: this.model.calculateCalories(durationInSeconds, predictedName),
+          analyzing: false
+        };
+        
+        this.model.updateMeal(analyzingMeal.id, updates);
+        this.view.updateMealList(this.model.getMeals());
+        this.view.showMessage(`✅ Analisis selesai! Latihan terdeteksi: ${predictedName}`, 'success');
+      })
+      .catch(error => {
+        console.error('Prediction error:', error);
+        this.model.deleteMeal(analyzingMeal.id);
+        this.view.updateMealList(this.model.getMeals());
+        this.view.showMessage('❌ Gagal menganalisis gambar: ' + error.message, 'error');
+      });
   }
 
   // Utility methods
@@ -195,12 +263,11 @@ export default class HomePresenter {
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  // ✅ Update method ini
   getTargetCalories() {
     return this.model.getTargetCalories();
   }
 
-    setTargetCalories(calories) {
+  setTargetCalories(calories) {
     this.model.setTargetCalories(calories);
   }
 }

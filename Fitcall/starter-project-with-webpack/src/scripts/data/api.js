@@ -4,7 +4,7 @@ import CONFIG from '../config.js';
 // Create axios instance
 const apiClient = axios.create({
   baseURL: CONFIG.BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
 );
 
 // ================================
-// SESSION MANAGEMENT - FIXED
+// SESSION MANAGEMENT
 // ================================
 
 export function setToken(token) {
@@ -55,7 +55,6 @@ export function setToken(token) {
 
 export function getToken() {
   const token = localStorage.getItem('authToken');
-  // ✅ Handle null string dan return null jika tidak valid
   if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
     return null;
   }
@@ -63,12 +62,9 @@ export function getToken() {
 }
 
 export function removeToken() {
-  // ✅ Hapus semua data auth dari localStorage
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
-  localStorage.removeItem('refreshToken'); // jika ada
-  
-  // ✅ Clear semua item yang mungkin ada
+  localStorage.removeItem('refreshToken');
   const keysToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -79,27 +75,20 @@ export function removeToken() {
   keysToRemove.forEach(key => localStorage.removeItem(key));
 }
 
-// ✅ Fungsi untuk force logout tanpa API call
 export function forceLogout() {
   removeToken();
   window.location.hash = '/login';
-  window.location.reload(); // ✅ Reload untuk clear state
+  window.location.reload();
 }
 
-// ✅ Perbaiki fungsi logout
 export async function logout() {
   try {
-    // Panggil API logout untuk clear refresh token di server
     await apiClient.delete('/logout');
     console.log('Logout API success');
   } catch (error) {
     console.error('Logout API error:', error);
-    // Tetap lanjut logout meski API error
   } finally {
-    // ✅ Pastikan clear semua data
     removeToken();
-    
-    // ✅ Redirect dan reload
     window.location.hash = '/login';
     setTimeout(() => {
       window.location.reload();
@@ -107,16 +96,12 @@ export async function logout() {
   }
 }
 
-// ✅ Perbaiki fungsi isAuthenticated
 export function isAuthenticated() {
   const token = getToken();
   const user = getCurrentUser();
-  
-  // ✅ Harus ada token yang valid DAN user data
-  return !!(token && user && token.length > 10); // token minimal 10 karakter
+  return !!(token && user && token.length > 10);
 }
 
-// ✅ Tambahkan fungsi untuk get user data
 export function getCurrentUser() {
   try {
     const userStr = localStorage.getItem('user');
@@ -127,24 +112,22 @@ export function getCurrentUser() {
     return user && typeof user === 'object' ? user : null;
   } catch (error) {
     console.error('Error parsing user data:', error);
-    localStorage.removeItem('user'); // Remove corrupted data
+    localStorage.removeItem('user');
     return null;
   }
 }
 
-// ✅ Tambahkan fungsi untuk clear all auth data
 export function clearAuthData() {
   removeToken();
   console.log('Auth data cleared');
 }
 
 // ================================
-// REGISTER API (tetap sama)
+// REGISTER API
 // ================================
 export async function registerUser(userData) {
   try {
     const response = await apiClient.post('/users', userData);
-    
     return {
       success: true,
       data: response.data.data,
@@ -209,12 +192,11 @@ function handleRegisterError(error) {
 }
 
 // ================================
-// LOGIN API (tetap sama)
+// LOGIN API
 // ================================
 export async function loginUser({ email, password }) {
   try {
     const response = await apiClient.post('/login', { email, password });
-    
     return {
       success: true,
       accessToken: response.data.accessToken,
@@ -237,7 +219,7 @@ export async function loginUser({ email, password }) {
           errorMessage = serverMessage || 'Email tidak ditemukan';
           break;
         case 500:
-          errorMessage = 'Server sedang bermasalah. Coba lagi dalam beberapa saat';
+        errorMessage = 'Server sedang bermasalah. Coba lagi dalam beberapa saat';
           break;
         default:
           errorMessage = serverMessage || `Error ${statusCode}: Terjadi kesalahan`;
@@ -259,12 +241,11 @@ export async function loginUser({ email, password }) {
 }
 
 // ================================
-// USER PROFILE API - TAMBAH INI
+// USER PROFILE API
 // ================================
 export async function getUserProfile() {
   try {
     const response = await apiClient.get('/users');
-    
     return {
       success: true,
       data: response.data,
@@ -296,6 +277,63 @@ export async function getUserProfile() {
       }
     } else if (error.request) {
       errorMessage = 'Tidak dapat terhubung ke server';
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+      statusCode: statusCode
+    };
+  }
+}
+
+// ================================
+// IMAGE PREDICTION API
+// ================================
+export async function predictImage(imageFile) {
+  try {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await apiClient.post('/predict-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      message: 'Image prediction successful'
+    };
+  } catch (error) {
+    console.error('Image prediction error:', error);
+    
+    let errorMessage = 'Gagal melakukan prediksi gambar';
+    let statusCode = null;
+
+    if (error.response) {
+      statusCode = error.response.status;
+      const serverMessage = error.response.data?.error;
+
+      switch (statusCode) {
+        case 400:
+          errorMessage = serverMessage || 'Gambar tidak valid';
+          break;
+        case 401:
+          errorMessage = 'Token tidak valid, silakan login ulang';
+          forceLogout();
+          break;
+        case 500:
+          errorMessage = 'Server sedang bermasalah atau model gagal memproses gambar';
+          break;
+        default:
+          errorMessage = serverMessage || `Error ${statusCode}`;
+      }
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Request timeout. Coba lagi dalam beberapa saat';
     }
 
     return {

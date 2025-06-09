@@ -1,4 +1,3 @@
-// home-model.js
 import { setToken, getToken, getUserProfile } from '../../data/api.js';
 
 export default class HomeModel {
@@ -11,27 +10,19 @@ export default class HomeModel {
 
     // Calorie burn rates per second (converted from per-minute rates)
     this.calorieRates = {
+      'Push Up': 8 / 60,
       'Jogging Session': 10 / 60,
       'Yoga Practice': 4 / 60,
       'Weight Lifting': 7 / 60,
-      'Cardio Workout': 12 / 60,
-      'HIIT Training': 15 / 60,
-      'Cycling Session': 8 / 60,
-      'Bodyweight Circuit': 10 / 60,
-      'Strength Training': 6 / 60,
-      'Loncat Bintang': 8 / 60
+      'Cardio Workout': 12 / 60
     };
 
     this.mealNames = [
+      'Push Up',
       'Jogging Session',
       'Yoga Practice',
       'Weight Lifting',
-      'Cardio Workout',
-      'HIIT Training',
-      'Cycling Session',
-      'Bodyweight Circuit',
-      'Strength Training',
-      'Loncat Bintang'
+      'Cardio Workout'
     ];
   }
 
@@ -41,13 +32,12 @@ export default class HomeModel {
 
   async getUserData() {
     try {
-      console.log('Getting user data...'); // Debug log
+      console.log('Getting user data...');
       const result = await getUserProfile();
 
-      console.log('API result:', result); // Debug log
+      console.log('API result:', result);
 
       if (result.success && result.data) {
-        // Backend sekarang return single object, bukan array
         return result.data;
       }
 
@@ -85,24 +75,38 @@ export default class HomeModel {
 
   // Meal and exercise management
   calculateCalories(duration, mealName) {
-    const baseCalories = duration * this.calorieRates[mealName];
-    // Add 10% randomization for realism
-    const randomFactor = 0.9 + Math.random() * 0.2; // Between 0.9 and 1.1
+    const baseCalories = duration * (this.calorieRates[mealName] || 8 / 60);
+    const randomFactor = 0.9 + Math.random() * 0.2;
     return Math.round(baseCalories * randomFactor);
   }
 
   addMeal(mealData) {
-    const randomName = this.mealNames[Math.floor(Math.random() * this.mealNames.length)];
-    const initialCalories = this.calculateCalories(mealData.duration, randomName);
-
     const meal = {
       id: Date.now(),
-      name: randomName,
-      calories: initialCalories,
-      finalCalories: initialCalories,
+      name: mealData.name || this.getRandomMealName(),
+      calories: this.calculateCalories(mealData.duration, mealData.name),
+      finalCalories: this.calculateCalories(mealData.duration, mealData.name),
       description: `Duration: ${mealData.duration} seconds`,
       image: mealData.image,
-      completed: false
+      completed: false,
+      analyzing: mealData.analyzing || false
+    };
+
+    this.meals.push(meal);
+    return meal;
+  }
+
+  // New method for adding analyzing meal
+  addAnalyzingMeal(mealData) {
+    const meal = {
+      id: Date.now(),
+      name: 'Analyzing...',
+      calories: 0,
+      finalCalories: 0,
+      description: `Duration: ${mealData.duration} seconds`,
+      image: mealData.image,
+      completed: false,
+      analyzing: true
     };
 
     this.meals.push(meal);
@@ -177,11 +181,10 @@ export default class HomeModel {
     return this.mealNames[Math.floor(Math.random() * this.mealNames.length)];
   }
 
-    setTargetCalories(calories) {
+  setTargetCalories(calories) {
     this.targetCalories = calories || 500;
   }
 
-  // ✅ Tambahkan method untuk get target calories
   getTargetCalories() {
     return this.targetCalories;
   }
