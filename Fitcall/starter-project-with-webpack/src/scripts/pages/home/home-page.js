@@ -1,4 +1,3 @@
-// home-page.js
 import HomePresenter from './home-presenter.js';
 import HomeModel from './home-model.js';
 
@@ -7,8 +6,11 @@ export default class HomePage {
     this.presenter = new HomePresenter(this);
     this.model = new HomeModel();
     this.cameraStream = null;
+    this.currentDate = new Date(); // Current displayed date
+    this.firstActivityDate = null; // Will be set based on user data
+    this.todayDate = new Date(); // Today's date for max boundary
     
-    // ✅ Set global reference untuk event handlers
+    // Set global reference for event handlers
     window.homePage = this;
   }
 
@@ -23,10 +25,10 @@ export default class HomePage {
       `;
     }
 
-    // ✅ UBAH: Get user data from API (async)
+    // Get user data from API
     const userData = await this.model.getUserData();
     
-    // ✅ Handle jika gagal ambil data user
+    // Handle if user data fetch fails
     if (!userData) {
       return `
         <div class="error-container">
@@ -38,21 +40,30 @@ export default class HomePage {
       `;
     }
 
+    // Set first activity date (assuming it's in userData, or default to a month ago for demo)
+    this.firstActivityDate = userData.firstActivityDate 
+      ? new Date(userData.firstActivityDate) 
+      : new Date(this.todayDate.getFullYear(), this.todayDate.getMonth() - 1, this.todayDate.getDate());
+    
+    // Ensure firstActivityDate is not after today
+    if (this.firstActivityDate > this.todayDate) {
+      this.firstActivityDate = new Date(this.todayDate);
+    }
+
     const userName = userData?.name || 'User';
     const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-    // Get current date
-    const currentDate = new Date();
+    // Format displayed date
     const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     
-    const currentMonth = monthNames[currentDate.getMonth()];
-    const currentDay = currentDate.getDate();
-    const currentDayName = dayNames[currentDate.getDay()];
-    const currentYear = currentDate.getFullYear();
+    const currentMonth = monthNames[this.currentDate.getMonth()];
+    const currentDay = this.currentDate.getDate();
+    const currentDayName = dayNames[this.currentDate.getDay()];
+    const currentYear = this.currentDate.getFullYear();
 
-    // ✅ Tampilkan target calories dari database
+    // Get target calories from user data
     const targetCalories = userData?.targetCalories || 500;
 
     // Render full UI for authenticated users
@@ -78,8 +89,18 @@ export default class HomePage {
         </div>
 
         <div class="date-section">
-          <h1 class="date-title">${currentMonth} ${currentDay}</h1>
-          <p class="date-subtitle">${currentDayName}, ${currentDay} ${currentMonth} ${currentYear}</p>
+          <div class="date-navigation">
+            <button class="nav-btn prev" id="prevDateBtn">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="date-display">
+              <h1 class="date-title">${currentMonth} ${currentDay}</h1>
+              <p class="date-subtitle">${currentDayName}, ${currentDay} ${currentMonth} ${currentYear}</p>
+            </div>
+            <button class="nav-btn next" id="nextDateBtn">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
 
         <div class="dashboard">
@@ -272,24 +293,25 @@ export default class HomePage {
     `;
   }
 
-// home-page.js
-async afterRender() {
-  // Only initialize event listeners for authenticated users
-  if (this.model.getToken()) {
-    // ✅ TAMBAHKAN: Set target calories ke model sebelum update display
-    const userData = await this.model.getUserData();
-    if (userData) {
-      const targetCalories = userData?.targetCalories || 500;
-      this.presenter.setTargetCalories(targetCalories);
+  async afterRender() {
+    // Only initialize event listeners for authenticated users
+    if (this.model.getToken()) {
+      // Set target calories to model before updating display
+      const userData = await this.model.getUserData();
+      if (userData) {
+        const targetCalories = userData?.targetCalories || 500;
+        this.presenter.setTargetCalories(targetCalories);
+      }
+      
+      this.initializeEventListeners();
+      // Initialize calories display
+      this.presenter.updateCaloriesDisplay();
+      // Update date display to ensure it reflects currentDate
+      this.updateDateDisplay();
     }
-    
-    this.initializeEventListeners();
-    // Initialize calories display
-    this.presenter.updateCaloriesDisplay();
+    // Always check auth state to trigger redirect if needed
+    this.presenter.checkAuthState();
   }
-  // Always check auth state to trigger redirect if needed
-  this.presenter.checkAuthState();
-}
 
   initializeEventListeners() {
     // Existing event listeners
@@ -322,7 +344,23 @@ async afterRender() {
       });
     }
 
-    // New event listeners for modals and buttons
+    // Date navigation event listeners
+    const prevDateBtn = document.getElementById('prevDateBtn');
+    const nextDateBtn = document.getElementById('nextDateBtn');
+
+    if (prevDateBtn) {
+      prevDateBtn.addEventListener('click', () => {
+        this.navigateToPreviousDate();
+      });
+    }
+
+    if (nextDateBtn) {
+      nextDateBtn.addEventListener('click', () => {
+        this.navigateToNextDate();
+      });
+    }
+
+    // Modal and other button event listeners
     this.initializeModalEventListeners();
     this.initializeCameraEventListeners();
     this.initializeGalleryEventListeners();
@@ -332,15 +370,76 @@ async afterRender() {
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
         this.closeAllModals();
+      } else if (event.key === 'ArrowLeft') {
+        this.navigateToPreviousDate();
+      } else if (event.key === 'ArrowRight') {
+        this.navigateToNextDate();
       }
     });
+  }
 
-    setTimeout(() => {
-      const progressFill = document.querySelector('.progress-fill');
-      if (progressFill) {
-        progressFill.style.width = '0%';
-      }
-    }, 500);
+  navigateToPreviousDate() {
+    const prevDate = new Date(this.currentDate);
+    prevDate.setDate(this.currentDate.getDate() - 1);
+
+    // Check if previous date is not before firstActivityDate
+    if (prevDate >= this.firstActivityDate) {
+      this.currentDate = prevDate;
+      this.updateDateDisplay();
+      this.showMessage('Navigated to previous date', 'info');
+      // Refresh meal list for the selected date
+      this.updateMealList(this.model.getMeals()); // Fixed: Call updateMealList on HomePage instance
+    } else {
+      this.showMessage('Cannot navigate before your first activity', 'info');
+    }
+  }
+
+  navigateToNextDate() {
+    const nextDate = new Date(this.currentDate);
+    nextDate.setDate(this.currentDate.getDate() + 1);
+
+    // Check if next date is not after today
+    if (nextDate <= this.todayDate) {
+      this.currentDate = nextDate;
+      this.updateDateDisplay();
+      this.showMessage('Navigated to next date', 'info');
+      // Refresh meal list for the selected date
+      this.updateMealList(this.model.getMeals()); // Fixed: Call updateMealList on HomePage instance
+    } else {
+      this.showMessage('Cannot navigate beyond today', 'info');
+    }
+  }
+
+  updateDateDisplay() {
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
+    const currentMonth = monthNames[this.currentDate.getMonth()];
+    const currentDay = this.currentDate.getDate();
+    const currentDayName = dayNames[this.currentDate.getDay()];
+    const currentYear = this.currentDate.getFullYear();
+
+    const dateTitle = document.querySelector('.date-title');
+    const dateSubtitle = document.querySelector('.date-subtitle');
+
+    if (dateTitle) {
+      dateTitle.textContent = `${currentMonth} ${currentDay}`;
+    }
+    if (dateSubtitle) {
+      dateSubtitle.textContent = `${currentDayName}, ${currentDay} ${currentMonth} ${currentYear}`;
+    }
+
+    // Update navigation button states
+    const prevDateBtn = document.getElementById('prevDateBtn');
+    const nextDateBtn = document.getElementById('nextDateBtn');
+
+    if (prevDateBtn) {
+      prevDateBtn.disabled = this.currentDate <= this.firstActivityDate;
+    }
+    if (nextDateBtn) {
+      nextDateBtn.disabled = this.currentDate >= this.todayDate;
+    }
   }
 
   initializeModalEventListeners() {
@@ -561,7 +660,7 @@ async afterRender() {
     const modalOverlay = document.getElementById('modalOverlay');
     if (modalOverlay) {
       modalOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('overflow-hidden');
     }
   }
 
@@ -569,7 +668,7 @@ async afterRender() {
     const modalOverlay = document.getElementById('modalOverlay');
     if (modalOverlay) {
       modalOverlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('overflow-hidden');
     }
   }
 
@@ -578,19 +677,19 @@ async afterRender() {
     const cameraModalOverlay = document.getElementById('cameraModalOverlay');
     if (cameraModalOverlay) {
       cameraModalOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('overflow-hidden');
+    }
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const video = document.getElementById('cameraPreview');
-        video.srcObject = stream;
-        video.style.display = 'block';
-        this.cameraStream = stream;
-      } catch (err) {
-        console.error('Error accessing camera:', err);
-        this.showMessage('Could not access camera. Please check permissions.', 'error');
-        this.closeCameraModal();
-      }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.getElementById('cameraPreview');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      this.cameraStream = stream;
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      this.showMessage('Could not access camera. Please check permissions.', 'error');
+      this.closeCameraModal();
     }
   }
 
@@ -598,7 +697,7 @@ async afterRender() {
     const cameraModalOverlay = document.getElementById('cameraModalOverlay');
     if (cameraModalOverlay) {
       cameraModalOverlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('overflow-hidden');
 
       if (this.cameraStream) {
         this.cameraStream.getTracks().forEach(track => track.stop());
@@ -621,7 +720,7 @@ async afterRender() {
         captureBtn.style.display = 'block';
       }
 
-      // Reset form
+      // Reset form fields
       document.getElementById('mealDuration').value = '10';
       document.getElementById('durationUnit').value = 'seconds';
     }
@@ -655,7 +754,7 @@ async afterRender() {
     const galleryModalOverlay = document.getElementById('galleryModalOverlay');
     if (galleryModalOverlay) {
       galleryModalOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('overflow-hidden');
     }
   }
 
@@ -663,9 +762,9 @@ async afterRender() {
     const galleryModalOverlay = document.getElementById('galleryModalOverlay');
     if (galleryModalOverlay) {
       galleryModalOverlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('overflow-hidden');
 
-      // Reset form
+      // Reset form fields
       document.getElementById('galleryInput').value = '';
       document.getElementById('galleryPreview').src = '';
       document.getElementById('galleryPreview').style.display = 'none';
@@ -705,7 +804,7 @@ async afterRender() {
 
     if (modal) {
       modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('overflow-hidden');
     }
   }
 
@@ -713,7 +812,7 @@ async afterRender() {
     const modal = document.getElementById('exerciseModalOverlay');
     if (modal) {
       modal.classList.remove('active');
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('overflow-hidden');
     }
     this.presenter.cleanup();
   }
@@ -783,15 +882,15 @@ async afterRender() {
             </div>
           `;
           
-          // ✅ Add event listeners untuk meal item dan delete button
+          // Add event listeners for meal item and delete button
           mealItem.addEventListener('click', (e) => {
-            // Jika yang diklik bukan delete button, buka exercise modal
+            // If not clicking delete button, open exercise modal
             if (!e.target.closest('.delete-meal-btn')) {
               this.openExerciseModal(meal);
             }
           });
 
-          // Add event listener untuk delete button
+          // Add event listener for delete button
           const deleteBtn = mealItem.querySelector('.delete-meal-btn');
           if (deleteBtn) {
             deleteBtn.addEventListener('click', (e) => {
@@ -912,7 +1011,7 @@ async afterRender() {
     }
   }
 
-  // Global method for delete meal (called from inline onclick)
+  // Global method for deleting meal (called from inline onclick)
   handleDeleteMeal(id) {
     this.presenter.handleDeleteMeal(id);
   }
@@ -929,7 +1028,7 @@ async afterRender() {
     
     setTimeout(() => {
       if (messageDiv.parentNode) {
-        messageDiv.remove();
+        messageDiv.parentNode.removeChild(messageDiv);
       }
     }, 4000);
   }
