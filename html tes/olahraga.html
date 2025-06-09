@@ -226,9 +226,9 @@
 
         .progress-number {
             font-size: 20px;
-            font-weight: 700;
+            font-weight: bold;
             color: #ffffff;
-            line-height: 1;
+            line-height: 1
         }
 
         .progress-label {
@@ -289,7 +289,6 @@
             color: #ffffff;
         }
 
-        /* Recently Card Styles */
         .recently-card {
             background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(78, 205, 196, 0.2) 100%);
             backdrop-filter: blur(20px);
@@ -310,7 +309,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.1)"></circle></svg>');
             background-size: 30px 30px;
             opacity: 0.2;
         }
@@ -330,7 +329,7 @@
 
         .no-meals {
             font-size: 24px;
-            font-weight: 700;
+            font-weight: bold;
             margin-bottom: 16px;
             color: #ffffff;
         }
@@ -338,14 +337,14 @@
         .meal-suggestion {
             font-size: 16px;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 0.8);
             margin-bottom: 24px;
         }
 
         .instagram-link {
             color: #4a5fff;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         .meal-list {
@@ -357,11 +356,12 @@
         .meal-item {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             padding: 12px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
         }
 
         .meal-image {
@@ -386,6 +386,12 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
+        .meal-status {
+            font-size: 14px;
+            color: #2ecc71;
+            margin-left: auto;
+        }
+
         .meal-actions {
             display: flex;
             gap: 8px;
@@ -404,13 +410,180 @@
             color: #4a5fff;
         }
 
+        .add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+        }
+
+        .add-btn:active {
+            transform: scale(0.95);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 0;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(0,0,0,0.2);
+            color: #333;
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .modal-option:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .modal-option-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .modal-option-icon.camera {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+        }
+
+        .modal-option-icon.album {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .modal-option-icon.describe {
+            background: linear-gradient(135deg, #ffa726, #ff9800);
+        }
+
+        .modal-option-icon.favorite {
+            background: linear-gradient(135deg, #e91e63, #f06292);
+        }
+
+        .modal-option-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
         .daily-section {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
             border-radius: 16px;
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
         }
 
         .daily-header {
@@ -457,6 +630,216 @@
             font-weight: 400;
         }
 
+        .camera-modal {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .modal-content input,
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-content button:hover {
+            background: linear-gradient(135deg, #ff8e8e, #44a08d);
+        }
+
+        .exercise-modal {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .exercise-modal .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .exercise-modal .modal-title {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+
+        .exercise-modal .modal-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .exercise-modal .modal-duration {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .exercise-modal .modal-calories {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .exercise-modal .modal-options {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .exercise-modal .modal-option-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #4ecdc4;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .exercise-modal .modal-option-btn:hover {
+            background: #44a08d;
+        }
+
+        .exercise-modal .modal-option-btn.secondary {
+            background: #ff6b6b;
+        }
+
+        .exercise-modal .modal-option-btn.secondary:hover {
+            background: #ff8e8e;
+        }
+
+        .exercise-modal .duration-counter {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .exercise-modal .duration-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .exercise-modal .duration-btn:hover {
+            background: #764ba2;
+        }
+
+        .exercise-modal .duration-value {
+            font-size: 20px;
+            color: #333;
+            padding: 8px;
+        }
+
+        .exercise-modal .loading-indicator {
+            display: none;
+            width: 100px;
+            height: 100px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .exercise-modal .timer {
+            display: none;
+            font-size: 48px;
+            color: #333;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .exercise-modal .start-btn {
+            display: none;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .exercise-modal .start-btn:hover {
+            background: #2980b9;
+        }
+
+        .exercise-modal .completed-status {
+            display: none;
+            font-size: 18px;
+            color: #2ecc71;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        .exercise-modal .prep-message {
+            display: none;
+            font-size: 18px;
+            color: #333;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 16px;
@@ -496,6 +879,19 @@
 
             .header-actions {
                 order: 3;
+            }
+
+            .add-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 56px;
+                height: 56px;
+                font-size: 22px;
+            }
+
+            .modal {
+                margin: 20px;
+                width: calc(100% - 40px);
             }
         }
 
@@ -547,7 +943,7 @@
 
         <div class="date-section">
             <h1 class="date-title">Mei 24</h1>
-            <p class="date-subtitle">Sabtu, 31 Mei 2025</p>
+            <p class="date-subtitle">Senin, 09 Juni 2025</p>
         </div>
 
         <div class="dashboard">
@@ -563,7 +959,7 @@
                     <div class="circular-progress">
                         <div class="progress-ring">
                             <div class="progress-text">
-                                <div class="progress-number">0/500</div>
+                                <div class="progress-number" id="calorieProgress">0/200</div>
                                 <div class="progress-label">kkal tersisa</div>
                             </div>
                         </div>
@@ -576,7 +972,7 @@
                             </div>
                             <div class="stat-info">
                                 <div class="stat-label">Target Kalori</div>
-                                <div class="stat-value">500 kkal</div>
+                                <div class="stat-value">200 kkal</div>
                             </div>
                         </div>
                         
@@ -586,7 +982,7 @@
                             </div>
                             <div class="stat-info">
                                 <div class="stat-label">Kalori Terbakar</div>
-                                <div class="stat-value">0 kkal</div>
+                                <div class="stat-value" id="caloriesBurned">0 kkal</div>
                             </div>
                         </div>
                     </div>
@@ -596,9 +992,9 @@
             <div class="card recently-card">
                 <div class="recently-content">
                     <h3 class="recently-title">Recently</h3>
-                    <div id="no-meals" class="no-meals">No meals yet!</div>
+                    <div id="no-meals" class="no-meals">No Train's yet!</div>
                     <p id="meal-suggestion" class="meal-suggestion">
-                        ambil sesuatu yang lezat, catat di sini,<br>
+                        ambil sesuatu yang sehat, catat di sini,<br>
                         dan periksa instagram kami <a href="#" class="instagram-link">@fitcal.ai</a>
                     </p>
                     <div id="meal-list" class="meal-list"></div>
@@ -623,5 +1019,640 @@
             <p class="footer-text">© 2025 FitCall Gym. All rights reserved.</p>
         </footer>
     </div>
+
+    <!-- Add Button -->
+    <button class="add-btn" onclick="openModal()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Main Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Meal</h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-options">
+                    <div class="modal-option" onclick="openCameraModal()">
+                        <div class="modal-option-icon camera">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <div class="modal-option-text">Camera</div>
+                    </div>
+                    <div class="modal-option" onclick="openGalleryModal()">
+                        <div class="modal-option-icon album">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="modal-option-text">Album</div>
+                    </div>
+                    <div class="modal-option" onclick="selectOption('favorite')">
+                        <div class="modal-option-icon favorite">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="modal-option-text">Favorite</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div class="modal-overlay" id="cameraModalOverlay" onclick="closeCameraModal(event)">
+        <div class="camera-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Capture Meal</h3>
+                <button class="close-btn" onclick="closeCameraModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <video id="cameraPreview" class="camera-preview" autoplay></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <img id="capturedImage" class="camera-preview" style="display: none;">
+                <select id="durationUnit" style="margin-bottom: 8px;">
+                    <option value="seconds">Detik</option>
+                    <option value="minutes">Menit</option>
+                </select>
+                <input type="number" id="mealDuration" placeholder="Durasi (min. 10 detik)" min="10" step="1" oninput="updateDuration()">
+                <button id="captureBtn" onclick="captureImage()">Capture</button>
+                <button onclick="saveMeal()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal-overlay" id="galleryModalOverlay" onclick="closeGalleryModal(event)">
+        <div class="camera-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Select from Gallery</h3>
+                <button class="close-btn" onclick="closeGalleryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <input type="file" id="galleryInput" accept="image/*">
+                <img id="galleryPreview" class="camera-preview" style="display: none;">
+                <select id="galleryDurationUnit" style="margin-bottom: 8px;">
+                    <option value="seconds">Detik</option>
+                    <option value="minutes">Menit</option>
+                </select>
+                <input type="number" id="galleryMealDuration" placeholder="Durasi (min. 10 detik)" min="10" step="1" oninput="updateGalleryDuration()">
+                <button onclick="saveGalleryMeal()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Modal -->
+    <div class="modal-overlay" id="exerciseModalOverlay" onclick="closeExerciseModal(event)">
+        <div class="exercise-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title" id="exerciseModalTitle">LONCAT BINTANG</h3>
+                <button class="close-btn" onclick="closeExerciseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <img id="exerciseModalImage" class="modal-image" src="" alt="Exercise Image">
+            <div class="modal-duration" id="exerciseModalDuration">Durasi: 00:00</div>
+            <div class="modal-calories" id="exerciseModalCalories">Kalori: 0 kkal</div>
+            <div class="modal-options" id="exerciseOptions">
+                <button class="modal-option-btn" onclick="startExercise()">Mulai</button>
+                <button class="modal-option-btn secondary" onclick="saveExercise()">Simpan</button>
+            </div>
+            <div class="duration-counter" id="durationCounter">
+                <button class="duration-btn" onclick="decreaseDuration()">-</button>
+                <span class="duration-value" id="exerciseDuration">00:00</span>
+                <button class="duration-btn" onclick="increaseDuration()">+</button>
+            </div>
+            <div class="loading-indicator" id="loadingIndicator"></div>
+            <div class="timer" id="exerciseTimer">00:00</div>
+            <button class="start-btn" id="startBtn" onclick="stopExercise()">|| Jeda</button>
+            <div class="completed-status" id="completedStatus">Completed</div>
+            <div class="prep-message" id="prepMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let meals = [];
+        let totalCaloriesBurned = 0;
+        const targetCalories = 200;
+        let currentDuration = 10; // Start at minimum 10 seconds
+        let selectedMeal = null;
+        let timerInterval = null;
+        let timeLeft = 0;
+
+        // Calorie burn rates per second (converted from per-minute rates)
+        const calorieRates = {
+            'Jogging Session': 10 / 60,
+            'Yoga Practice': 4 / 60,
+            'Weight Lifting': 7 / 60,
+            'Cardio Workout': 12 / 60,
+            'HIIT Training': 15 / 60,
+            'Cycling Session': 8 / 60,
+            'Bodyweight Circuit': 10 / 60,
+            'Strength Training': 6 / 60,
+            'Loncat Bintang': 8 / 60
+        };
+
+        const mealNames = [
+            'Jogging Session',
+            'Yoga Practice',
+            'Weight Lifting',
+            'Cardio Workout',
+            'HIIT Training',
+            'Cycling Session',
+            'Bodyweight Circuit',
+            'Strength Training',
+            'Loncat Bintang'
+        ];
+
+        function calculateCalories(duration, mealName) {
+            const baseCalories = duration * calorieRates[mealName];
+            // Add 10% randomization for realism
+            const randomFactor = 0.9 + Math.random() * 0.2; // Between 0.9 and 1.1
+            return Math.round(baseCalories * randomFactor);
+        }
+
+        function openModal() {
+            const modal = document.getElementById('modalOverlay');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('modalOverlay');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openCameraModal() {
+            closeModal();
+            const cameraModal = document.getElementById('cameraModalOverlay');
+            cameraModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const video = document.getElementById('cameraPreview');
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    video.stream = stream;
+                })
+                .catch(err => {
+                    console.error('Error accessing camera:', err);
+                    alert('Could not access camera. Please check permissions.');
+                    closeCameraModal();
+                });
+        }
+
+        function closeCameraModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const cameraModal = document.getElementById('cameraModalOverlay');
+            cameraModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+
+            const video = document.getElementById('cameraPreview');
+            if (video.stream) {
+                video.stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                video.style.display = 'none';
+            }
+            document.getElementById('capturedImage').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'block';
+            document.getElementById('mealDuration').value = '10';
+            document.getElementById('durationUnit').value = 'seconds';
+        }
+
+        function captureImage() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('cameraCanvas');
+            const capturedImage = document.getElementById('capturedImage');
+            const captureBtn = document.getElementById('captureBtn');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            capturedImage.src = canvas.toDataURL('image/jpeg');
+            capturedImage.style.display = 'block';
+            video.style.display = 'none';
+            captureBtn.style.display = 'none';
+
+            if (video.stream) {
+                video.stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        function saveMeal() {
+            const durationInput = parseInt(document.getElementById('mealDuration').value) || 0;
+            const unit = document.getElementById('durationUnit').value;
+            const duration = unit === 'minutes' ? durationInput * 60 : durationInput;
+            const capturedImage = document.getElementById('capturedImage');
+
+            if (!duration || duration < 10 || !capturedImage.src) {
+                alert('Please capture an image and enter a valid duration (minimum 10 seconds).');
+                return;
+            }
+
+            const randomName = mealNames[Math.floor(Math.random() * mealNames.length)];
+            const initialCalories = calculateCalories(duration, randomName);
+
+            const meal = {
+                id: Date.now(),
+                name: randomName,
+                calories: initialCalories,
+                finalCalories: initialCalories,
+                description: `Duration: ${duration} seconds`,
+                image: capturedImage.src,
+                completed: false
+            };
+
+            meals.push(meal);
+            updateMealList();
+            closeCameraModal();
+        }
+
+        function updateDuration() {
+            const durationInput = parseInt(document.getElementById('mealDuration').value) || 0;
+            const unit = document.getElementById('durationUnit').value;
+            const duration = unit === 'minutes' ? durationInput * 60 : durationInput;
+            const capturedImage = document.getElementById('capturedImage');
+
+            if (capturedImage.style.display === 'block' && duration >= 10) {
+                document.getElementById('mealDuration').setCustomValidity('');
+            } else {
+                document.getElementById('mealDuration').setCustomValidity('Please enter a duration of at least 10 seconds.');
+            }
+        }
+
+        function openGalleryModal() {
+            closeModal();
+            const galleryModal = document.getElementById('galleryModalOverlay');
+            galleryModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            const galleryInput = document.getElementById('galleryInput');
+            galleryInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('galleryPreview').src = e.target.result;
+                        document.getElementById('galleryPreview').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function closeGalleryModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const galleryModal = document.getElementById('galleryModalOverlay');
+            galleryModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            document.getElementById('galleryInput').value = '';
+            document.getElementById('galleryPreview').src = '';
+            document.getElementById('galleryPreview').style.display = 'none';
+            document.getElementById('galleryMealDuration').value = '10';
+            document.getElementById('galleryDurationUnit').value = 'seconds';
+        }
+
+        function saveGalleryMeal() {
+            const durationInput = parseInt(document.getElementById('galleryMealDuration').value) || 0;
+            const unit = document.getElementById('galleryDurationUnit').value;
+            const duration = unit === 'minutes' ? durationInput * 60 : durationInput;
+            const galleryPreview = document.getElementById('galleryPreview');
+
+            if (!duration || duration < 10 || !galleryPreview.src) {
+                alert('Please select an image and enter a valid duration (minimum 10 seconds).');
+                return;
+            }
+
+            const randomName = mealNames[Math.floor(Math.random() * mealNames.length)];
+            const initialCalories = calculateCalories(duration, randomName);
+
+            const meal = {
+                id: Date.now(),
+                name: randomName,
+                calories: initialCalories,
+                finalCalories: initialCalories,
+                description: `Duration: ${duration} seconds`,
+                image: galleryPreview.src,
+                completed: false
+            };
+
+            meals.push(meal);
+            updateMealList();
+            closeGalleryModal();
+        }
+
+        function updateGalleryDuration() {
+            const durationInput = parseInt(document.getElementById('galleryMealDuration').value) || 0;
+            const unit = document.getElementById('galleryDurationUnit').value;
+            const duration = unit === 'minutes' ? durationInput * 60 : durationInput;
+            const galleryPreview = document.getElementById('galleryPreview');
+
+            if (galleryPreview.style.display === 'block' && duration >= 10) {
+                document.getElementById('galleryMealDuration').setCustomValidity('');
+            } else {
+                document.getElementById('galleryMealDuration').setCustomValidity('Please enter a duration of at least 10 seconds.');
+            }
+        }
+
+        function updateMealList() {
+            const mealList = document.getElementById('meal-list');
+            const noMeals = document.getElementById('no-meals');
+            const mealSuggestion = document.getElementById('meal-suggestion');
+
+            if (meals.length > 0) {
+                noMeals.style.display = 'none';
+                mealSuggestion.style.display = 'none';
+                mealList.innerHTML = '';
+
+                meals.forEach(meal => {
+                    const mealItem = document.createElement('div');
+                    mealItem.className = 'meal-item';
+                    mealItem.onclick = () => openExerciseModal(meal);
+                    mealItem.innerHTML = `
+                        <img src="${meal.image}" class="meal-image">
+                        <div class="meal-info">
+                            <div class="meal-name">${meal.name}</div>
+                            <div class="meal-nutrition">${meal.calories} kkal${meal.description ? ' - ' + meal.description : ''}</div>
+                        </div>
+                        <div class="meal-status">${meal.completed ? '<i class="fas fa-check"></i> Selesai' : ''}</div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" onclick="deleteMeal(${meal.id}, event)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    mealList.appendChild(mealItem);
+                });
+            } else {
+                noMeals.style.display = 'block';
+                mealSuggestion.style.display = 'block';
+                mealList.innerHTML = '';
+            }
+        }
+
+        function deleteMeal(id, event) {
+            event.stopPropagation();
+            const deletedMeal = meals.find(meal => meal.id === id);
+            if (deletedMeal && deletedMeal.completed) {
+                totalCaloriesBurned -= deletedMeal.finalCalories;
+                updateCalories();
+            }
+            meals = meals.filter(meal => meal.id !== id);
+            updateMealList();
+        }
+
+        function updateCalories() {
+            totalCaloriesBurned = meals.reduce((sum, meal) => sum + (meal.completed ? meal.finalCalories : 0), 0);
+            const caloriesRemaining = targetCalories - totalCaloriesBurned;
+            document.getElementById('calorieProgress').textContent = `${totalCaloriesBurned}/${targetCalories}`;
+            document.getElementById('caloriesBurned').textContent = `${totalCaloriesBurned} kkal`;
+            const progressPercentage = (totalCaloriesBurned / targetCalories) * 360;
+            document.querySelector('.progress-ring').style.background = `conic-gradient(#ff6b6b ${progressPercentage}deg, rgba(255, 255, 255, 0.1) ${progressPercentage}deg)`;
+        }
+
+        function selectOption(option) {
+            console.log('Selected option:', option);
+            switch(option) {
+                case 'describe':
+                    alert('Describe food functionality will be implemented here');
+                    break;
+                case 'favorite':
+                    alert('Favorite functionality will be implemented here');
+                    break;
+            }
+            closeModal();
+        }
+
+        function openExerciseModal(meal) {
+            selectedMeal = meal;
+            const modal = document.getElementById('exerciseModalOverlay');
+            const title = document.getElementById('exerciseModalTitle');
+            const image = document.getElementById('exerciseModalImage');
+            const durationDisplay = document.getElementById('exerciseModalDuration');
+            const caloriesDisplay = document.getElementById('exerciseModalCalories');
+            const durationCounter = document.getElementById('durationCounter');
+            const durationValue = document.getElementById('exerciseDuration');
+            const options = document.getElementById('exerciseOptions');
+            const loading = document.getElementById('loadingIndicator');
+            const timer = document.getElementById('exerciseTimer');
+            const startBtn = document.getElementById('startBtn');
+            const completedStatus = document.getElementById('completedStatus');
+            const prepMessage = document.getElementById('prepMessage');
+
+            title.textContent = meal.name.toUpperCase();
+            image.src = meal.image;
+            currentDuration = Math.max(10, parseInt(meal.description.split(' ')[1]) || 10);
+            updateDisplay();
+            options.style.display = 'flex';
+            loading.style.display = 'none';
+            timer.style.display = 'none';
+            startBtn.style.display = 'none';
+            completedStatus.style.display = 'none';
+            prepMessage.style.display = 'none';
+            durationCounter.style.display = 'flex';
+
+            if (meal.completed) {
+                options.style.display = 'none';
+                durationCounter.style.display = 'none';
+                durationDisplay.textContent = `Durasi: ${formatDuration(currentDuration)}`;
+                caloriesDisplay.textContent = `Kalori: ${meal.finalCalories} kkal`;
+                completedStatus.style.display = 'block';
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeExerciseModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('exerciseModalOverlay');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            selectedMeal = null;
+            currentDuration = 10;
+            timeLeft = 0;
+            const options = document.getElementById('exerciseOptions');
+            const loading = document.getElementById('loadingIndicator');
+            const timer = document.getElementById('exerciseTimer');
+            const startBtn = document.getElementById('startBtn');
+            const durationCounter = document.getElementById('durationCounter');
+            const completedStatus = document.getElementById('completedStatus');
+            const prepMessage = document.getElementById('prepMessage');
+            options.style.display = 'flex';
+            loading.style.display = 'none';
+            timer.style.display = 'none';
+            startBtn.style.display = 'none';
+            durationCounter.style.display = 'flex';
+            completedStatus.style.display = 'none';
+            prepMessage.style.display = 'none';
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const durationValue = document.getElementById('exerciseDuration');
+            const durationDisplay = document.getElementById('exerciseModalDuration');
+            const caloriesDisplay = document.getElementById('exerciseModalCalories');
+            durationValue.textContent = formatDuration(currentDuration);
+            durationDisplay.textContent = `Durasi: ${formatDuration(currentDuration)}`;
+            if (selectedMeal) {
+                const initialCalories = calculateCalories(currentDuration, selectedMeal.name);
+                caloriesDisplay.textContent = `Kalori: ${initialCalories} kkal`;
+                const index = meals.findIndex(meal => meal.id === selectedMeal.id);
+                if (index !== -1) {
+                    meals[index].calories = initialCalories;
+                    meals[index].description = `Duration: ${currentDuration} seconds`;
+                    updateMealList();
+                }
+            }
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function increaseDuration() {
+            if (!selectedMeal || selectedMeal.completed || document.getElementById('loadingIndicator').style.display === 'block' || document.getElementById('exerciseTimer').style.display === 'block') return;
+            currentDuration = Math.min(currentDuration + 10, 86400);
+            updateDisplay();
+        }
+
+        function decreaseDuration() {
+            if (!selectedMeal || selectedMeal.completed || document.getElementById('loadingIndicator').style.display === 'block' || document.getElementById('exerciseTimer').style.display === 'block') return;
+            currentDuration = Math.max(10, currentDuration - 10);
+            updateDisplay();
+        }
+
+        function startExercise() {
+            if (!selectedMeal || currentDuration < 10 || selectedMeal.completed) return;
+
+            const options = document.getElementById('exerciseOptions');
+            const loading = document.getElementById('loadingIndicator');
+            const timer = document.getElementById('exerciseTimer');
+            const startBtn = document.getElementById('startBtn');
+            const durationCounter = document.getElementById('durationCounter');
+            const prepMessage = document.getElementById('prepMessage');
+
+            options.style.display = 'none';
+            loading.style.display = 'block';
+            timer.style.display = 'none';
+            startBtn.style.display = 'none';
+            durationCounter.style.display = 'none';
+            prepMessage.style.display = 'block';
+            prepMessage.textContent = `Persiapan melakukan gerakan: ${selectedMeal.name}`;
+
+            setTimeout(() => {
+                loading.style.display = 'none';
+                prepMessage.style.display = 'none'; // Hide prep message when timer starts
+                timer.style.display = 'block';
+                startBtn.style.display = 'block';
+                timeLeft = currentDuration;
+                updateTimerDisplay();
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        startBtn.textContent = 'Selesai';
+                        startBtn.onclick = () => completeExercise();
+                    }
+                }, 1000);
+            }, 3000);
+        }
+
+        function stopExercise() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            const startBtn = document.getElementById('startBtn');
+            startBtn.textContent = 'Lanjut';
+            startBtn.onclick = resumeExercise;
+        }
+
+        function resumeExercise() {
+            const startBtn = document.getElementById('startBtn');
+            startBtn.textContent = '|| Jeda';
+            startBtn.onclick = stopExercise;
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    startBtn.textContent = 'Selesai';
+                    startBtn.onclick = () => completeExercise();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timer = document.getElementById('exerciseTimer');
+            timer.textContent = formatDuration(timeLeft);
+        }
+
+        function completeExercise() {
+            if (!selectedMeal) return;
+
+            const index = meals.findIndex(meal => meal.id === selectedMeal.id);
+            if (index !== -1) {
+                meals[index].finalCalories = calculateCalories(currentDuration, selectedMeal.name);
+                meals[index].calories = meals[index].finalCalories;
+                meals[index].completed = true;
+                totalCaloriesBurned += meals[index].finalCalories;
+                updateCalories();
+                updateMealList();
+            }
+            closeExerciseModal();
+        }
+
+        function saveExercise() {
+            if (!selectedMeal) return;
+
+            const index = meals.findIndex(meal => meal.id === selectedMeal.id);
+            if (index !== -1) {
+                meals[index].finalCalories = calculateCalories(currentDuration, selectedMeal.name);
+                meals[index].calories = meals[index].finalCalories;
+                meals[index].description = `Duration: ${currentDuration} seconds`;
+                updateMealList();
+            }
+            closeExerciseModal();
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeCameraModal();
+                closeGalleryModal();
+                closeExerciseModal();
+            }
+        });
+
+        document.getElementById('modalOverlay').addEventListener('scroll', function(e) {
+            e.preventDefault();
+        });
+        document.getElementById('cameraModalOverlay').addEventListener('scroll', function(e) {
+            e.preventDefault();
+        });
+        document.getElementById('galleryModalOverlay').addEventListener('scroll', function(e) {
+            e.preventDefault();
+        });
+        document.getElementById('exerciseModalOverlay').addEventListener('scroll', function(e) {
+            e.preventDefault();
+        });
+    </script>
 </body>
 </html>
