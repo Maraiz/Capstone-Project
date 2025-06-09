@@ -6,12 +6,37 @@ import jwt from 'jsonwebtoken';
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await Users.findAll({
-            attributes:['id', 'name', 'email']
+        // ✅ Ambil userId dari token
+        const userId = req.userId;
+        
+        console.log('Current user ID from token:', userId); // Debug log
+        
+        if (!userId) {
+            return res.status(400).json({ msg: "User ID tidak ditemukan dalam token" });
+        }
+        
+        // ✅ Return data user yang sedang login saja
+        const user = await Users.findOne({
+            where: { id: userId },
+            attributes: [
+                'id', 'name', 'email', 'username', 
+                'targetCalories', 'currentWeight', 'targetWeight',
+                'weeklyTarget', 'height', 'age', 'gender', 
+                'activityLevel', 'country'
+            ]
         });
-        res.json(users);
+        
+        if (!user) {
+            console.log('User not found for ID:', userId);
+            return res.status(404).json({ msg: "User tidak ditemukan" });
+        }
+        
+        console.log('User found:', user.name);
+        res.json(user); // Return single object
+        
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching user:', error);
+        res.status(500).json({ msg: "Server error" });
     }
 }
 
@@ -177,37 +202,31 @@ function calculateCalories({ height, currentWeight, age, gender, activityLevel, 
 export const Login = async (req, res) => {
     const { email, password } = req.body;
     
-    // Validasi input
     if (!email || !password) {
         return res.status(400).json({ msg: "Email dan password harus diisi" });
     }
     
     try {
-        // Fix 1: Gunakan Users (sesuai import) dan findOne
         const user = await Users.findOne({
-            where: {
-                email: email
-            }
+            where: { email: email }
         });
         
-        // Fix 2: Cek apakah user ditemukan
         if (!user) {
             return res.status(404).json({msg: "Email tidak ditemukan"});
         }
         
-        // Fix 3: Langsung akses user.password (tanpa [0])
         const match = await bcrypt.compare(password, user.password);
         if(!match) return res.status(400).json({msg: "Password salah"});
         
-        // Fix 4: Langsung akses properti (tanpa [0])
         const userId = user.id;
         const name = user.name;
         const userEmail = user.email;
         
+        // ✅ UBAH: Perpanjang token expiry
         const accessToken = jwt.sign(
             { userId, name, email: userEmail }, 
             process.env.ACCESS_TOKEN_SECRET, 
-            { expiresIn: '15s' } // Perpanjang dari 15s
+            { expiresIn: '1h' } // ✅ Ubah dari 15s ke 1 jam
         );
         
         const refreshToken = jwt.sign(
@@ -216,7 +235,6 @@ export const Login = async (req, res) => {
             { expiresIn: '1d' }
         );
         
-        // Update refresh token
         await Users.update(
             { refresh_token: refreshToken }, 
             { where: { id: userId } }

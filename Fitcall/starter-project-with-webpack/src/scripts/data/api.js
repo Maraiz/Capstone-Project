@@ -258,4 +258,52 @@ export async function loginUser({ email, password }) {
   }
 }
 
+// ================================
+// USER PROFILE API - TAMBAH INI
+// ================================
+export async function getUserProfile() {
+  try {
+    const response = await apiClient.get('/users');
+    
+    return {
+      success: true,
+      data: response.data,
+      message: 'User profile fetched successfully'
+    };
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    
+    let errorMessage = 'Gagal mengambil data profil';
+    let statusCode = null;
+
+    if (error.response) {
+      statusCode = error.response.status;
+      const serverMessage = error.response.data?.msg;
+
+      switch (statusCode) {
+        case 401:
+          errorMessage = 'Token tidak valid, silakan login ulang';
+          forceLogout();
+          break;
+        case 404:
+          errorMessage = 'User tidak ditemukan';
+          break;
+        case 500:
+          errorMessage = 'Server sedang bermasalah';
+          break;
+        default:
+          errorMessage = serverMessage || `Error ${statusCode}`;
+      }
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+      statusCode: statusCode
+    };
+  }
+}
+
 export { apiClient };
