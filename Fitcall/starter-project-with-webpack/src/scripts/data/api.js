@@ -344,4 +344,88 @@ export async function predictImage(imageFile) {
   }
 }
 
+export async function calculateWorkoutCalories({ gerakan, durasi }) {
+  try {
+    const response = await apiClient.post('/calculate-workout', {
+      gerakan,
+      durasi
+    });
+
+    return {
+      success: true,
+      data: response.data.hasil,
+      message: response.data.message || 'Kalori berhasil dihitung'
+    };
+  } catch (error) {
+    console.error('Calculate workout calories error:', error);
+    
+    let errorMessage = 'Gagal menghitung kalori';
+    let statusCode = null;
+
+    if (error.response) {
+      statusCode = error.response.status;
+      const serverMessage = error.response.data?.error;
+
+      switch (statusCode) {
+        case 400:
+          errorMessage = serverMessage || 'Data tidak valid';
+          break;
+        case 401:
+          errorMessage = 'Token tidak valid, silakan login ulang';
+          forceLogout();
+          break;
+        case 404:
+          errorMessage = 'Gerakan tidak ditemukan';
+          break;
+        case 500:
+          errorMessage = 'Server sedang bermasalah';
+          break;
+        default:
+          errorMessage = serverMessage || `Error ${statusCode}`;
+      }
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Request timeout. Coba lagi dalam beberapa saat';
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+      statusCode: statusCode,
+      availableExercises: error.response?.data?.availableExercises || null
+    };
+  }
+}
+
+// Fungsi untuk mendapatkan daftar exercise yang tersedia
+export async function getAvailableExercises() {
+  try {
+    const response = await apiClient.get('/exercises');
+
+    return {
+      success: true,
+      data: response.data.exercises,
+      total: response.data.total,
+      message: 'Daftar exercise berhasil diambil'
+    };
+  } catch (error) {
+    console.error('Get exercises error:', error);
+    
+    let errorMessage = 'Gagal mengambil daftar exercise';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
 export { apiClient };

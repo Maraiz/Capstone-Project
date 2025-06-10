@@ -26,10 +26,10 @@ export default class HomePresenter {
     }, 1500);
   }
 
-  // Meal operations
+  // Updated: Meal operations with async calorie calculation
   async handleAddMeal(mealData, predictedName) {
     try {
-      const meal = this.model.addMeal({ ...mealData, name: predictedName });
+      const meal = await this.model.addMeal({ ...mealData, name: predictedName });
       this.view.updateMealList(this.model.getMeals());
       this.view.showMessage(`Latihan ${predictedName} berhasil ditambahkan!`, 'success');
       return meal;
@@ -97,45 +97,47 @@ export default class HomePresenter {
     this.startTimer();
   }
 
-  handleCompleteExercise() {
+  async handleCompleteExercise() {
     const selectedMeal = this.model.getSelectedMeal();
     if (selectedMeal) {
-      const completedMeal = this.model.completeExercise(selectedMeal.id, this.model.getCurrentDuration());
+      const completedMeal = await this.model.completeExercise(selectedMeal.id, this.model.getCurrentDuration());
       if (completedMeal) {
         this.updateCaloriesDisplay();
         this.view.updateMealList(this.model.getMeals());
-        this.view.showMessage('Latihan selesai!', 'success');
+        this.view.showMessage(`Latihan selesai! Kalori terbakar: ${completedMeal.finalCalories} kkal`, 'success');
       }
     }
     this.cleanup();
   }
 
-  handleSaveExercise() {
+  async handleSaveExercise() {
     const selectedMeal = this.model.getSelectedMeal();
     if (selectedMeal) {
+      const finalCalories = await this.model.calculateCalories(this.model.getCurrentDuration(), selectedMeal.name);
       const updates = {
-        finalCalories: this.model.calculateCalories(this.model.getCurrentDuration(), selectedMeal.name),
-        description: `Duration: ${this.model.getCurrentDuration()} seconds`
+        finalCalories: finalCalories,
+        description: `Duration: ${this.model.getCurrentDuration()} seconds`,
+        calories: finalCalories
       };
-      updates.calories = updates.finalCalories;
       
-      this.model.updateMeal(selectedMeal.id, updates);
+      await this.model.updateMeal(selectedMeal.id, updates);
       this.view.updateMealList(this.model.getMeals());
-      this.view.showMessage('Latihan disimpan!', 'success');
+      this.view.showMessage(`Latihan disimpan! Estimasi kalori: ${finalCalories} kkal`, 'success');
     }
     this.cleanup();
   }
 
-  handleDurationChange(newDuration) {
+  async handleDurationChange(newDuration) {
     this.model.setCurrentDuration(newDuration);
     const selectedMeal = this.model.getSelectedMeal();
     if (selectedMeal) {
+      const newCalories = await this.model.calculateCalories(newDuration, selectedMeal.name);
       const updates = {
-        calories: this.model.calculateCalories(newDuration, selectedMeal.name),
+        calories: newCalories,
         description: `Duration: ${newDuration} seconds`
       };
-      this.model.updateMeal(selectedMeal.id, updates);
-      this.view.updateExerciseDisplay(newDuration, updates.calories);
+      await this.model.updateMeal(selectedMeal.id, updates);
+      this.view.updateExerciseDisplay(newDuration, newCalories);
       this.view.updateMealList(this.model.getMeals());
     }
   }
@@ -152,62 +154,53 @@ export default class HomePresenter {
     this.timeLeft = 0;
   }
 
-  // Camera operations - langsung tutup modal
+  // Camera operations
   handleCameraCapture(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-
-    // Simpan gambar dulu ke variable lokal
     const imageData = imageSrc;
     
     console.log('Camera capture - Image data length:', imageData.length);
     console.log('Camera capture - Duration:', durationInSeconds);
 
-    // Show analyzing state immediately dengan gambar yang sudah disimpan
     const analyzingMeal = this.model.addAnalyzingMeal({
       duration: durationInSeconds,
-      image: imageData  // Pastikan gambar tersimpan
+      image: imageData
     });
     
     this.view.updateMealList(this.model.getMeals());
     this.view.showMessage('📸 Gambar disimpan! Sedang menganalisis...', 'info');
 
-    // Start background prediction dengan delay kecil
     setTimeout(() => {
       this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
     }, 500);
   }
 
-  // Gallery operations - langsung tutup modal
+  // Gallery operations
   handleGalleryUpload(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-
-    // Simpan gambar dulu ke variable lokal
     const imageData = imageSrc;
     
     console.log('Gallery upload - Image data length:', imageData.length);
     console.log('Gallery upload - Duration:', durationInSeconds);
 
-    // Show analyzing state immediately dengan gambar yang sudah disimpan
     const analyzingMeal = this.model.addAnalyzingMeal({
       duration: durationInSeconds,
-      image: imageData  // Pastikan gambar tersimpan
+      image: imageData
     });
     
     this.view.updateMealList(this.model.getMeals());
     this.view.showMessage('🖼️ Gambar disimpan! Sedang menganalisis...', 'info');
 
-    // Start background prediction dengan delay kecil
     setTimeout(() => {
       this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
     }, 500);
   }
 
-  // Background processing method
-  processImagePrediction(imageSrc, analyzingMeal, durationInSeconds) {
+  // Updated: Background processing with API calorie calculation
+  async processImagePrediction(imageSrc, analyzingMeal, durationInSeconds) {
     console.log('Starting prediction process...');
     console.log('Image source length:', imageSrc ? imageSrc.length : 'No image');
     
-    // Validasi gambar masih ada
     if (!imageSrc || imageSrc.length < 100) {
       console.error('Image data lost or invalid');
       this.model.deleteMeal(analyzingMeal.id);
@@ -216,44 +209,53 @@ export default class HomePresenter {
       return;
     }
 
-    fetch(imageSrc)
-      .then(response => {
-        console.log('Fetch response status:', response.status);
-        return response.blob();
-      })
-      .then(blob => {
-        console.log('Blob size:', blob.size);
-        const imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-        console.log('Created file:', imageFile.name, imageFile.size);
-        return predictImage(imageFile);
-      })
-      .then(prediction => {
-        console.log('Prediction result:', prediction);
-        
-        if (!prediction.success) {
-          throw new Error(prediction.message);
-        }
+    try {
+      // Step 1: Convert image and predict
+      const response = await fetch(imageSrc);
+      console.log('Fetch response status:', response.status);
+      
+      const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      
+      const imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+      console.log('Created file:', imageFile.name, imageFile.size);
+      
+      const prediction = await predictImage(imageFile);
+      console.log('Prediction result:', prediction);
+      
+      if (!prediction.success) {
+        throw new Error(prediction.message);
+      }
 
-        const predictedName = prediction.data?.predicted_class
-          ? prediction.data.predicted_class.replace(/\b\w/g, c => c.toUpperCase())
-          : this.model.getRandomMealName();
+      // Step 2: Get predicted exercise name
+      const predictedName = prediction.data?.predicted_class
+        ? prediction.data.predicted_class.replace(/\b\w/g, c => c.toUpperCase())
+        : this.model.getRandomMealName();
 
-        const updates = {
-          name: predictedName,
-          calories: this.model.calculateCalories(durationInSeconds, predictedName),
-          analyzing: false
-        };
-        
-        this.model.updateMeal(analyzingMeal.id, updates);
-        this.view.updateMealList(this.model.getMeals());
-        this.view.showMessage(`✅ Analisis selesai! Latihan terdeteksi: ${predictedName}`, 'success');
-      })
-      .catch(error => {
-        console.error('Prediction error:', error);
-        this.model.deleteMeal(analyzingMeal.id);
-        this.view.updateMealList(this.model.getMeals());
-        this.view.showMessage('❌ Gagal menganalisis gambar: ' + error.message, 'error');
-      });
+      console.log('Predicted exercise:', predictedName);
+
+      // Step 3: Calculate calories using backend API
+      const calories = await this.model.calculateCalories(durationInSeconds, predictedName);
+      console.log('Calculated calories:', calories);
+
+      // Step 4: Update meal with results
+      const updates = {
+        name: predictedName,
+        calories: calories,
+        finalCalories: calories,
+        analyzing: false
+      };
+      
+      await this.model.updateMeal(analyzingMeal.id, updates);
+      this.view.updateMealList(this.model.getMeals());
+      this.view.showMessage(`✅ Analisis selesai! Latihan: ${predictedName} (${calories} kkal)`, 'success');
+
+    } catch (error) {
+      console.error('Prediction error:', error);
+      this.model.deleteMeal(analyzingMeal.id);
+      this.view.updateMealList(this.model.getMeals());
+      this.view.showMessage('❌ Gagal menganalisis gambar: ' + error.message, 'error');
+    }
   }
 
   // Utility methods

@@ -1,52 +1,195 @@
-GET http://localhost:5000/users
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hQGdtYWlsLmNvbSIsImlhdCI6MTc0OTI4NDU0MSwiZXhwIjoxNzQ5Mjg1NDQxfQ.TNoBMLWJSTM1OIXwIZAJMtUs_PbY4g7b33xrEuTzZz8
+### Variables
+@baseUrl = http://localhost:5000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hQGdtYWlsLmNvbSIsImlhdCI6MTc0OTI4NDU0MSwiZXhwIjoxNzQ5Mjg1NDQxfQ.TNoBMLWJSTM1OIXwIZAJMtUs_PbY4g7b33xrEuTzZz8
 
-###
-POST  http://localhost:5000/users
+###################################################
+# AUTH & USER ROUTES
+###################################################
+
+### 1. Register User
+POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    // Step 1 - Basic Info
     "name": "Maulana Akbar",
-    
-    // Step 2 - Personal Info
     "country": "indonesia", 
     "gender": "male",
     "age": 25,
-    
-    // Step 3 - Physical Info
     "height": 170,
     "currentWeight": 75.5,
     "targetWeight": 70,
-    
-    // Step 4 - Goals  
     "weeklyTarget": 0.5,
     "targetDeadline": "2024-12-31",
-    
-    // Step 5 - Activity
     "activityLevel": 1.55,
-    
-    // Step 6 - Calories (optional, akan dihitung otomatis)
-    // "targetCalories": 2000,
-    
-    // Step 7 - Account
     "username": "maulana12345",
     "email": "maulana123@gmail.com", 
     "password": "123456789",
     "confirmPassword": "123456789"
 }
 
-###
-POST  http://localhost:5000/login
+### 2. Login
+POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "maulana@gmail.com",
-    "password": "12345678"
+    "email": "maulana123@gmail.com",
+    "password": "123456789"
 }
 
-###
-GET http://localhost:5000/token
+### 3. Get Users (Protected)
+GET {{baseUrl}}/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTQ5NTc2MCwiZXhwIjoxNzQ5NDk2NjYwfQ.PP8Kr9Io7KOqvgFAV0GxN3__kcNKCDKrfz_YZkasuN4
 
-###
-DELETE  http://localhost:5000/logout
+### 4. Refresh Token
+GET {{baseUrl}}/token
+
+### 5. Logout
+DELETE {{baseUrl}}/logout
+
+###################################################
+# ML PREDICTION ROUTES
+###################################################
+
+### 6. Predict Tabular Data
+POST {{baseUrl}}/predict
+Content-Type: application/json
+
+{
+    "features": [5.1, 3.5, 1.4, 0.2]
+}
+
+### 7. Predict Image (Multipart)
+POST {{baseUrl}}/predict-image
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/your/image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###################################################
+# FITNESS ROUTES
+###################################################
+
+### 8. Calculate Workout Calories (Protected)
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTQ5NjkxNywiZXhwIjoxNzQ5NDk3ODE3fQ.frG9yCAl1HY3SXy8KqLcYWkkTTiDo46BJa65K8SE7wU
+
+{
+    "gerakan": "push_up",
+    "durasi": 1
+}
+
+### 9. Get Available Exercises
+GET {{baseUrl}}/exercises
+
+###################################################
+# TEST SCENARIOS
+###################################################
+
+### Test dengan gerakan squat
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTQ5NTc2MCwiZXhwIjoxNzQ5NDk2NjYwfQ.PP8Kr9Io7KOqvgFAV0GxN3__kcNKCDKrfz_YZkasuN4
+
+{
+    "gerakan": "squat",
+    "durasi": 1
+}
+
+### Test dengan gerakan deadlift
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "gerakan": "deadlift",
+    "durasi": 3
+}
+
+### Test dengan gerakan plank
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "gerakan": "plank",
+    "durasi": 2
+}
+
+### Test error - gerakan tidak valid
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "gerakan": "jumping_jack",
+    "durasi": 5
+}
+
+### Test error - durasi negatif
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTQ5NjQwOCwiZXhwIjoxNzQ5NDk3MzA4fQ.R7wVQx8v-0S9CiaCVveHYz2EP_WV_aGFVFEFmeOOudA
+
+{
+    "gerakan": "push_up",
+    "durasi": 0.1
+}
+
+### Test error - tanpa token
+POST {{baseUrl}}/calculate-workout
+Content-Type: application/json
+
+{
+    "gerakan": "push_up",
+    "durasi": 5
+}
+
+###################################################
+# ALTERNATIVE REGISTER EXAMPLES
+###################################################
+
+### Register dengan data minimum
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "name": "Test User",
+    "gender": "female",
+    "age": 30,
+    "height": 165,
+    "currentWeight": 60,
+    "targetWeight": 55,
+    "weeklyTarget": 0.3,
+    "activityLevel": 1.2,
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+
+### Register dengan semua data lengkap
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "country": "USA",
+    "gender": "male", 
+    "age": 28,
+    "height": 180,
+    "currentWeight": 85,
+    "targetWeight": 80,
+    "weeklyTarget": 0.5,
+    "targetDeadline": "2025-06-01",
+    "activityLevel": 1.725,
+    "targetCalories": 2200,
+    "username": "johndoe",
+    "email": "john@example.com",
+    "password": "securepass123",
+    "confirmPassword": "securepass123"
+}
