@@ -1,10 +1,10 @@
-import HomeModel from './home-model.js';
 import { predictImage } from '../../data/api.js';
 
 export default class HomePresenter {
-  constructor(view) {
+  constructor(view, model = null) {
     this.view = view;
-    this.model = new HomeModel();
+    // **FIX 1: Use shared model instance instead of creating new one**
+    this.model = model || view.model;
     this.timerInterval = null;
     this.timeLeft = 0;
   }
@@ -19,18 +19,24 @@ export default class HomePresenter {
   }
 
   handleLogout() {
+    // Clear auth dan reset model
     this.model.clearAuth();
+    
     this.view.showMessage('Logout berhasil! Mengalihkan ke halaman awal...', 'success');
     setTimeout(() => {
       window.location.hash = '/';
     }, 1500);
   }
 
-  // Updated: Meal operations with async calorie calculation
+  // **FIX 2: Updated meal operations with proper error handling**
   async handleAddMeal(mealData, predictedName) {
     try {
       const meal = await this.model.addMeal({ ...mealData, name: predictedName });
+      
+      // Refresh meal list dari model
       this.view.updateMealList(this.model.getMeals());
+      this.updateCaloriesDisplay();
+      
       this.view.showMessage(`Latihan ${predictedName} berhasil ditambahkan!`, 'success');
       return meal;
     } catch (error) {
@@ -39,9 +45,9 @@ export default class HomePresenter {
     }
   }
 
-  handleDeleteMeal(id) {
+  async handleDeleteMeal(id) {
     try {
-      const deletedMeal = this.model.deleteMeal(id);
+      const deletedMeal = await this.model.deleteMeal(id); // Make async
       if (deletedMeal) {
         this.updateCaloriesDisplay();
         this.view.updateMealList(this.model.getMeals());
@@ -154,77 +160,85 @@ export default class HomePresenter {
     this.timeLeft = 0;
   }
 
-  // Camera operations
+  // **FIX 3: Improved camera and gallery operations with better error handling**
   handleCameraCapture(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-    const imageData = imageSrc;
     
-    console.log('Camera capture - Image data length:', imageData.length);
+    // **FIX 4: Better image validation**
+    if (!imageSrc || imageSrc === 'data:,' || imageSrc.length < 100) {
+      this.view.showMessage('❌ Gambar tidak valid atau kosong', 'error');
+      return;
+    }
+    
+    console.log('Camera capture - Image data length:', imageSrc.length);
     console.log('Camera capture - Duration:', durationInSeconds);
 
     const analyzingMeal = this.model.addAnalyzingMeal({
       duration: durationInSeconds,
-      image: imageData
+      image: imageSrc
     });
     
     this.view.updateMealList(this.model.getMeals());
     this.view.showMessage('📸 Gambar disimpan! Sedang menganalisis...', 'info');
 
+    // **FIX 5: Add timeout for processing**
     setTimeout(() => {
-      this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
+      this.processImagePrediction(imageSrc, analyzingMeal, durationInSeconds);
     }, 500);
   }
 
-  // Gallery operations
   handleGalleryUpload(duration, unit, imageSrc) {
     const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-    const imageData = imageSrc;
     
-    console.log('Gallery upload - Image data length:', imageData.length);
+    // **FIX 6: Better image validation**
+    if (!imageSrc || imageSrc === 'data:,' || imageSrc.length < 100) {
+      this.view.showMessage('❌ Gambar tidak valid atau kosong', 'error');
+      return;
+    }
+    
+    console.log('Gallery upload - Image data length:', imageSrc.length);
     console.log('Gallery upload - Duration:', durationInSeconds);
 
     const analyzingMeal = this.model.addAnalyzingMeal({
       duration: durationInSeconds,
-      image: imageData
+      image: imageSrc
     });
     
     this.view.updateMealList(this.model.getMeals());
     this.view.showMessage('🖼️ Gambar disimpan! Sedang menganalisis...', 'info');
 
+    // **FIX 7: Add timeout for processing**
     setTimeout(() => {
-      this.processImagePrediction(imageData, analyzingMeal, durationInSeconds);
+      this.processImagePrediction(imageSrc, analyzingMeal, durationInSeconds);
     }, 500);
   }
 
-  // Updated: Background processing with API calorie calculation
+  // **FIX 8: Enhanced background processing with better error handling and timeout**
   async processImagePrediction(imageSrc, analyzingMeal, durationInSeconds) {
     console.log('Starting prediction process...');
-    console.log('Image source length:', imageSrc ? imageSrc.length : 'No image');
     
+    // **FIX 9: Comprehensive image validation**
     if (!imageSrc || imageSrc.length < 100) {
       console.error('Image data lost or invalid');
-      this.model.deleteMeal(analyzingMeal.id);
+      await this.model.deleteMeal(analyzingMeal.id);
       this.view.updateMealList(this.model.getMeals());
+      this.updateCaloriesDisplay();
       this.view.showMessage('❌ Data gambar hilang', 'error');
       return;
     }
 
+    // **FIX 10: Add processing timeout (30 seconds)**
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Prediction timeout after 30 seconds')), 30000);
+    });
+
     try {
-      // Step 1: Convert image and predict
-      const response = await fetch(imageSrc);
-      console.log('Fetch response status:', response.status);
-      
-      const blob = await response.blob();
-      console.log('Blob size:', blob.size);
-      
-      const imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-      console.log('Created file:', imageFile.name, imageFile.size);
-      
-      const prediction = await predictImage(imageFile);
-      console.log('Prediction result:', prediction);
+      // Step 1: Convert image and predict with timeout
+      const predictionPromise = this.performImagePrediction(imageSrc);
+      const prediction = await Promise.race([predictionPromise, timeoutPromise]);
       
       if (!prediction.success) {
-        throw new Error(prediction.message);
+        throw new Error(prediction.message || 'Prediction failed');
       }
 
       // Step 2: Get predicted exercise name
@@ -232,11 +246,8 @@ export default class HomePresenter {
         ? prediction.data.predicted_class.replace(/\b\w/g, c => c.toUpperCase())
         : this.model.getRandomMealName();
 
-      console.log('Predicted exercise:', predictedName);
-
-      // Step 3: Calculate calories using backend API
+      // Step 3: Calculate calories
       const calories = await this.model.calculateCalories(durationInSeconds, predictedName);
-      console.log('Calculated calories:', calories);
 
       // Step 4: Update meal with results
       const updates = {
@@ -247,15 +258,41 @@ export default class HomePresenter {
       };
       
       await this.model.updateMeal(analyzingMeal.id, updates);
+      
+      // **FIX 11: Proper UI refresh sequence**
       this.view.updateMealList(this.model.getMeals());
+      this.updateCaloriesDisplay();
+      
       this.view.showMessage(`✅ Analisis selesai! Latihan: ${predictedName} (${calories} kkal)`, 'success');
 
     } catch (error) {
       console.error('Prediction error:', error);
-      this.model.deleteMeal(analyzingMeal.id);
+      
+      // **FIX 12: Better error handling**
+      await this.model.deleteMeal(analyzingMeal.id);
       this.view.updateMealList(this.model.getMeals());
-      this.view.showMessage('❌ Gagal menganalisis gambar: ' + error.message, 'error');
+      this.updateCaloriesDisplay();
+      
+      let errorMessage = '❌ Gagal menganalisis gambar';
+      if (error.message.includes('timeout')) {
+        errorMessage += ': Timeout (> 30 detik)';
+      } else if (error.message.includes('network')) {
+        errorMessage += ': Masalah koneksi';
+      } else {
+        errorMessage += ': ' + error.message;
+      }
+      
+      this.view.showMessage(errorMessage, 'error');
     }
+  }
+
+  // **FIX 13: Separated prediction logic for better testing and timeout handling**
+  async performImagePrediction(imageSrc) {
+    const response = await fetch(imageSrc);
+    const blob = await response.blob();
+    const imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+    
+    return await predictImage(imageFile);
   }
 
   // Utility methods

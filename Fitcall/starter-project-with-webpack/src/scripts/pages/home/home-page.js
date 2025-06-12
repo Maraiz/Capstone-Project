@@ -3,8 +3,9 @@ import HomeModel from './home-model.js';
 
 export default class HomePage {
   constructor() {
-    this.presenter = new HomePresenter(this);
+    // **FIX 1: Share same model instance between presenter and page**
     this.model = new HomeModel();
+    this.presenter = new HomePresenter(this, this.model); // Pass shared model
     this.cameraStream = null;
     this.currentDate = new Date(); // Current displayed date
     this.firstActivityDate = null; // Will be set based on user data
@@ -287,16 +288,34 @@ export default class HomePage {
 
   async afterRender() {
     if (this.model.getToken()) {
+      // **FIX 2: Proper initialization sequence**
+      
+      // Step 1: Set model's current date BEFORE initialization
+      this.model.currentDate = new Date(this.currentDate);
+      
+      // Step 2: Initialize model
+      await this.model.initialize();
+      
+      // Step 3: Get user data and set target calories
       const userData = await this.model.getUserData();
       if (userData) {
         const targetCalories = userData?.targetCalories || 500;
         this.presenter.setTargetCalories(targetCalories);
       }
+      
+      // Step 4: Initialize event listeners
       this.initializeEventListeners();
+      
+      // Step 5: Update displays
       this.presenter.updateCaloriesDisplay();
-      // Update date display to ensure it reflects currentDate
       this.updateDateDisplay();
+      this.updateMealList(this.model.getMeals());
+      
+    } else {
+      // Reset model if no token
+      this.model.reset();
     }
+    
     this.presenter.checkAuthState();
   }
 
@@ -370,33 +389,45 @@ export default class HomePage {
   }
 
   // Date Navigation Methods
-  navigateToPreviousDate() {
+  async navigateToPreviousDate() {
     const prevDate = new Date(this.currentDate);
     prevDate.setDate(this.currentDate.getDate() - 1);
 
     // Check if previous date is not before firstActivityDate
     if (prevDate >= this.firstActivityDate) {
       this.currentDate = prevDate;
+      
+      // **FIX 3: Sync dates properly**
+      await this.model.setCurrentDate(this.currentDate);
+      
       this.updateDateDisplay();
       this.showMessage('Navigasi ke hari sebelumnya', 'info');
-      // Refresh meal list for the selected date
+      
+      // Update UI dengan data yang baru
       this.presenter.updateCaloriesDisplay();
+      this.updateMealList(this.model.getMeals());
     } else {
       this.showMessage('Tidak dapat navigasi sebelum aktivitas pertama', 'warning');
     }
   }
 
-  navigateToNextDate() {
+  async navigateToNextDate() {
     const nextDate = new Date(this.currentDate);
     nextDate.setDate(this.currentDate.getDate() + 1);
 
     // Check if next date is not after today
     if (nextDate <= this.todayDate) {
       this.currentDate = nextDate;
+      
+      // **FIX 4: Sync dates properly**
+      await this.model.setCurrentDate(this.currentDate);
+      
       this.updateDateDisplay();
       this.showMessage('Navigasi ke hari berikutnya', 'info');
-      // Refresh meal list for the selected date
+      
+      // Update UI dengan data yang baru
       this.presenter.updateCaloriesDisplay();
+      this.updateMealList(this.model.getMeals());
     } else {
       this.showMessage('Tidak dapat navigasi melewati hari ini', 'warning');
     }
@@ -496,134 +527,134 @@ export default class HomePage {
     }
   }
 
-initializeCameraEventListeners() {
-  const cameraModalOverlay = document.getElementById('cameraModalOverlay');
-  const closeCameraModalBtn = document.getElementById('closeCameraModalBtn');
-  const captureBtn = document.getElementById('captureBtn');
-  const saveMealBtn = document.getElementById('saveMealBtn');
+  initializeCameraEventListeners() {
+    const cameraModalOverlay = document.getElementById('cameraModalOverlay');
+    const closeCameraModalBtn = document.getElementById('closeCameraModalBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const saveMealBtn = document.getElementById('saveMealBtn');
 
-  if (cameraModalOverlay) {
-    cameraModalOverlay.addEventListener('click', (e) => {
-      if (e.target === cameraModalOverlay) {
+    if (cameraModalOverlay) {
+      cameraModalOverlay.addEventListener('click', (e) => {
+        if (e.target === cameraModalOverlay) {
+          this.closeCameraModal();
+        }
+      });
+    }
+
+    if (closeCameraModalBtn) {
+      closeCameraModalBtn.addEventListener('click', () => {
         this.closeCameraModal();
-      }
-    });
+      });
+    }
+
+    if (captureBtn) {
+      captureBtn.addEventListener('click', () => {
+        this.captureImage();
+      });
+    }
+
+    if (saveMealBtn) {
+      saveMealBtn.addEventListener('click', () => {
+        const duration = parseInt(document.getElementById('mealDuration').value) || 0;
+        const unit = document.getElementById('durationUnit').value;
+        const capturedImage = document.getElementById('capturedImage');
+
+        // **FIX 5: Better validation for camera capture**
+        const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+        if (!capturedImage.src || capturedImage.src === '' || capturedImage.src === 'data:,' || capturedImage.style.display === 'none') {
+          this.showMessage('Silakan ambil gambar terlebih dahulu!', 'error');
+          return;
+        }
+        
+        if (durationInSeconds < 10) {
+          this.showMessage('Durasi minimal 10 detik!', 'error');
+          return;
+        }
+
+        // Debug: log gambar
+        console.log('Saving camera image:', capturedImage.src.substring(0, 100) + '...');
+
+        // Simpan referensi gambar sebelum tutup modal
+        const imageDataToSave = capturedImage.src;
+
+        // Langsung tutup modal
+        this.closeCameraModal();
+        this.closeModal();
+
+        // Baru jalankan proses dengan gambar yang sudah disimpan
+        this.presenter.handleCameraCapture(duration, unit, imageDataToSave);
+      });
+    }
   }
 
-  if (closeCameraModalBtn) {
-    closeCameraModalBtn.addEventListener('click', () => {
-      this.closeCameraModal();
-    });
-  }
+  initializeGalleryEventListeners() {
+    const galleryModalOverlay = document.getElementById('galleryModalOverlay');
+    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
+    const saveGalleryMealBtn = document.getElementById('saveGalleryMealBtn');
+    const galleryInput = document.getElementById('galleryInput');
 
-  if (captureBtn) {
-    captureBtn.addEventListener('click', () => {
-      this.captureImage();
-    });
-  }
+    if (galleryModalOverlay) {
+      galleryModalOverlay.addEventListener('click', (e) => {
+        if (e.target === galleryModalOverlay) {
+          this.closeGalleryModal();
+        }
+      });
+    }
 
-  if (saveMealBtn) {
-    saveMealBtn.addEventListener('click', () => {
-      const duration = parseInt(document.getElementById('mealDuration').value) || 0;
-      const unit = document.getElementById('durationUnit').value;
-      const capturedImage = document.getElementById('capturedImage');
-
-      // Validasi lebih ketat
-      const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-      if (!capturedImage.src || capturedImage.src === '' || capturedImage.src === 'data:,') {
-        this.showMessage('Silakan ambil gambar terlebih dahulu!', 'error');
-        return;
-      }
-      
-      if (durationInSeconds < 10) {
-        this.showMessage('Durasi minimal 10 detik!', 'error');
-        return;
-      }
-
-      // Debug: log gambar
-      console.log('Saving camera image:', capturedImage.src.substring(0, 100) + '...');
-
-      // Simpan referensi gambar sebelum tutup modal
-      const imageDataToSave = capturedImage.src;
-
-      // Langsung tutup modal
-      this.closeCameraModal();
-      this.closeModal();
-
-      // Baru jalankan proses dengan gambar yang sudah disimpan
-      this.presenter.handleCameraCapture(duration, unit, imageDataToSave);
-    });
-  }
-}
-
-initializeGalleryEventListeners() {
-  const galleryModalOverlay = document.getElementById('galleryModalOverlay');
-  const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
-  const saveGalleryMealBtn = document.getElementById('saveGalleryMealBtn');
-  const galleryInput = document.getElementById('galleryInput');
-
-  if (galleryModalOverlay) {
-    galleryModalOverlay.addEventListener('click', (e) => {
-      if (e.target === galleryModalOverlay) {
+    if (closeGalleryModalBtn) {
+      closeGalleryModalBtn.addEventListener('click', () => {
         this.closeGalleryModal();
-      }
-    });
+      });
+    }
+
+    if (galleryInput) {
+      galleryInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const galleryPreview = document.getElementById('galleryPreview');
+            galleryPreview.src = e.target.result;
+            galleryPreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (saveGalleryMealBtn) {
+      saveGalleryMealBtn.addEventListener('click', () => {
+        const duration = parseInt(document.getElementById('galleryMealDuration').value) || 0;
+        const unit = document.getElementById('galleryDurationUnit').value;
+        const galleryPreview = document.getElementById('galleryPreview');
+
+        // **FIX 6: Better validation for gallery upload**
+        const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
+        if (!galleryPreview.src || galleryPreview.src === '' || galleryPreview.src === 'data:,' || galleryPreview.style.display === 'none') {
+          this.showMessage('Silakan pilih gambar terlebih dahulu!', 'error');
+          return;
+        }
+        
+        if (durationInSeconds < 10) {
+          this.showMessage('Durasi minimal 10 detik!', 'error');
+          return;
+        }
+
+        // Debug: log gambar
+        console.log('Saving gallery image:', galleryPreview.src.substring(0, 100) + '...');
+
+        // Simpan referensi gambar sebelum tutup modal
+        const imageDataToSave = galleryPreview.src;
+
+        // Langsung tutup modal
+        this.closeGalleryModal();
+        this.closeModal();
+
+        // Baru jalankan proses dengan gambar yang sudah disimpan
+        this.presenter.handleGalleryUpload(duration, unit, imageDataToSave);
+      });
+    }
   }
-
-  if (closeGalleryModalBtn) {
-    closeGalleryModalBtn.addEventListener('click', () => {
-      this.closeGalleryModal();
-    });
-  }
-
-  if (galleryInput) {
-    galleryInput.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const galleryPreview = document.getElementById('galleryPreview');
-          galleryPreview.src = e.target.result;
-          galleryPreview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
-
-  if (saveGalleryMealBtn) {
-    saveGalleryMealBtn.addEventListener('click', () => {
-      const duration = parseInt(document.getElementById('galleryMealDuration').value) || 0;
-      const unit = document.getElementById('galleryDurationUnit').value;
-      const galleryPreview = document.getElementById('galleryPreview');
-
-      // Validasi lebih ketat
-      const durationInSeconds = unit === 'minutes' ? duration * 60 : duration;
-      if (!galleryPreview.src || galleryPreview.src === '' || galleryPreview.src === 'data:,') {
-        this.showMessage('Silakan pilih gambar terlebih dahulu!', 'error');
-        return;
-      }
-      
-      if (durationInSeconds < 10) {
-        this.showMessage('Durasi minimal 10 detik!', 'error');
-        return;
-      }
-
-      // Debug: log gambar
-      console.log('Saving gallery image:', galleryPreview.src.substring(0, 100) + '...');
-
-      // Simpan referensi gambar sebelum tutup modal
-      const imageDataToSave = galleryPreview.src;
-
-      // Langsung tutup modal
-      this.closeGalleryModal();
-      this.closeModal();
-
-      // Baru jalankan proses dengan gambar yang sudah disimpan
-      this.presenter.handleGalleryUpload(duration, unit, imageDataToSave);
-    });
-  }
-}
 
   initializeExerciseEventListeners() {
     const exerciseModalOverlay = document.getElementById('exerciseModalOverlay');
@@ -650,7 +681,7 @@ initializeGalleryEventListeners() {
 
     if (startExerciseBtn) {
       startExerciseBtn.addEventListener('click', () => {
-        const selectedMeal = this.presenter.model.getSelectedMeal();
+        const selectedMeal = this.model.getSelectedMeal();
         if (selectedMeal && !selectedMeal.completed) {
           this.presenter.handleStartExercise(selectedMeal);
         }
@@ -666,9 +697,9 @@ initializeGalleryEventListeners() {
 
     if (decreaseDurationBtn) {
       decreaseDurationBtn.addEventListener('click', () => {
-        const selectedMeal = this.presenter.model.getSelectedMeal();
+        const selectedMeal = this.model.getSelectedMeal();
         if (selectedMeal && !selectedMeal.completed) {
-          const newDuration = Math.max(10, this.presenter.model.getCurrentDuration() - 10);
+          const newDuration = Math.max(10, this.model.getCurrentDuration() - 10);
           this.presenter.handleDurationChange(newDuration);
         }
       });
@@ -676,9 +707,9 @@ initializeGalleryEventListeners() {
 
     if (increaseDurationBtn) {
       increaseDurationBtn.addEventListener('click', () => {
-        const selectedMeal = this.presenter.model.getSelectedMeal();
+        const selectedMeal = this.model.getSelectedMeal();
         if (selectedMeal && !selectedMeal.completed) {
-          const newDuration = Math.min(86400, this.presenter.model.getCurrentDuration() + 10);
+          const newDuration = Math.min(86400, this.model.getCurrentDuration() + 10);
           this.presenter.handleDurationChange(newDuration);
         }
       });
@@ -774,18 +805,64 @@ initializeGalleryEventListeners() {
     const captureBtn = document.getElementById('captureBtn');
 
     if (video && canvas && capturedImage) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      capturedImage.src = canvas.toDataURL('image/jpeg');
-      capturedImage.style.display = 'block';
-      video.style.display = 'none';
-      captureBtn.style.display = 'none';
+      try {
+        // **FIX 7: Improved image capture with better quality control**
+        const maxWidth = 400;
+        const maxHeight = 400;
+        
+        let { videoWidth, videoHeight } = video;
+        
+        // Calculate proportional size
+        if (videoWidth > maxWidth) {
+          videoHeight = (videoHeight * maxWidth) / videoWidth;
+          videoWidth = maxWidth;
+        }
+        if (videoHeight > maxHeight) {
+          videoWidth = (videoWidth * maxHeight) / videoHeight;
+          videoHeight = maxHeight;
+        }
+        
+        canvas.width = videoWidth;
+        canvas.height = videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas first
+        ctx.clearRect(0, 0, videoWidth, videoHeight);
+        
+        // Draw image
+        ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+        
+        // Generate clean base64 dengan quality yang pas
+        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Validate generated base64
+        if (!dataURL || !dataURL.startsWith('data:image/jpeg;base64,')) {
+          throw new Error('Failed to generate valid base64');
+        }
+        
+        console.log('📸 Image captured successfully:', {
+          dimensions: `${videoWidth}x${videoHeight}`,
+          size: (dataURL.length / 1024).toFixed(2) + ' KB',
+          format: 'JPEG 80% quality',
+          isValid: dataURL.length > 1000 // Basic validation
+        });
+        
+        capturedImage.src = dataURL;
+        capturedImage.style.display = 'block';
+        video.style.display = 'none';
+        captureBtn.style.display = 'none';
 
-      if (this.cameraStream) {
-        this.cameraStream.getTracks().forEach(track => track.stop());
-        this.cameraStream = null;
-        video.srcObject = null;
+        // Stop camera
+        if (this.cameraStream) {
+          this.cameraStream.getTracks().forEach(track => track.stop());
+          this.cameraStream = null;
+          video.srcObject = null;
+        }
+        
+      } catch (error) {
+        console.error('❌ Error capturing image:', error);
+        this.showMessage('Gagal mengambil gambar. Coba lagi.', 'error');
       }
     }
   }
@@ -814,8 +891,8 @@ initializeGalleryEventListeners() {
   }
 
   openExerciseModal(meal) {
-    this.presenter.model.setSelectedMeal(meal);
-    this.presenter.model.setCurrentDuration(Math.max(10, parseInt(meal.description.split(' ')[1]) || 10));
+    this.model.setSelectedMeal(meal);
+    this.model.setCurrentDuration(Math.max(10, parseInt(meal.description.split(' ')[1]) || 10));
 
     const modal = document.getElementById('exerciseModalOverlay');
     const title = document.getElementById('exerciseModalTitle');
@@ -829,7 +906,7 @@ initializeGalleryEventListeners() {
     if (title) title.textContent = meal.name.toUpperCase();
     if (image) image.src = meal.image;
 
-    this.updateExerciseDisplay(this.presenter.model.getCurrentDuration(), meal.calories);
+    this.updateExerciseDisplay(this.model.getCurrentDuration(), meal.calories);
 
     if (meal.completed) {
       if (options) options.style.display = 'none';
@@ -891,78 +968,89 @@ initializeGalleryEventListeners() {
     this.closeModal();
   }
 
-updateMealList(meals) {
-  const mealList = document.getElementById('meal-list');
-  const noMeals = document.getElementById('no-meals');
-  const mealSuggestion = document.getElementById('meal-suggestion');
+  updateMealList(meals) {
+    const mealList = document.getElementById('meal-list');
+    const noMeals = document.getElementById('no-meals');
+    const mealSuggestion = document.getElementById('meal-suggestion');
 
-  if (meals.length > 0) {
-    if (noMeals) noMeals.style.display = 'none';
-    if (mealSuggestion) mealSuggestion.style.display = 'none';
-    if (mealList) {
-      mealList.innerHTML = '';
+    if (meals.length > 0) {
+      if (noMeals) noMeals.style.display = 'none';
+      if (mealSuggestion) mealSuggestion.style.display = 'none';
+      if (mealList) {
+        mealList.innerHTML = '';
 
-      meals.forEach(meal => {
-        const mealItem = document.createElement('div');
-        mealItem.className = `meal-item ${meal.analyzing ? 'analyzing analyzing-pulse' : ''}`;
-        mealItem.setAttribute('data-meal-id', meal.id);
-        
-        // Different HTML for analyzing state
-        if (meal.analyzing) {
-          mealItem.innerHTML = `
-            <img src="${meal.image}" class="meal-image">
-            <div class="meal-info">
-              <div class="meal-name analyzing-text">Analyzing<span class="analyzing-dots"></span></div>
-              <div class="meal-nutrition">Sedang menganalisis gambar...</div>
-              <div class="analyzing-progress">
-                <div class="analyzing-progress-bar"></div>
+        meals.forEach(meal => {
+          const mealItem = document.createElement('div');
+          mealItem.className = `meal-item ${meal.analyzing ? 'analyzing analyzing-pulse' : ''}`;
+          mealItem.setAttribute('data-meal-id', meal.id);
+          
+          // **FIX 8: Better image handling with error fallback**
+          const createImageElement = (src, className, altText = 'Exercise Image') => {
+            const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y0ZjRmNCIgc3Ryb2tlPSIjZGRkIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCIgeT0iNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+V29ya291dDwvdGV4dD48dGV4dCB4PSI1MCIgeT0iNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
+            
+            return `<img src="${src || defaultImg}" 
+                        class="${className}" 
+                        alt="${altText}"
+                        loading="lazy"
+                        onerror="this.onerror=null; this.src='${defaultImg}'; console.log('❌ Image failed to load for ${meal.name}, using fallback');"
+                        onload="console.log('✅ Image loaded for ${meal.name}');">`;
+          };
+          
+          if (meal.analyzing) {
+            mealItem.innerHTML = `
+              ${createImageElement(meal.image, 'meal-image', 'Analyzing...')}
+              <div class="meal-info">
+                <div class="meal-name analyzing-text">Analyzing<span class="analyzing-dots"></span></div>
+                <div class="meal-nutrition">Sedang menganalisis gambar...</div>
+                <div class="analyzing-progress">
+                  <div class="analyzing-progress-bar"></div>
+                </div>
               </div>
-            </div>
-            <div class="analyzing-status">
-              <div class="analyzing-spinner"></div>
-              <span>Processing</span>
-            </div>
-          `;
-        } else {
-          mealItem.innerHTML = `
-            <img src="${meal.image}" class="meal-image">
-            <div class="meal-info">
-              <div class="meal-name">${meal.name}</div>
-              <div class="meal-nutrition">${meal.calories} kkal${meal.description ? ' - ' + meal.description : ''}</div>
-            </div>
-            <div class="meal-status">${meal.completed ? '<i class="fas fa-check"></i> Selesai' : ''}</div>
-            <div class="meal-actions">
-              <button class="meal-action-btn delete-meal-btn" data-meal-id="${meal.id}">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          `;
+              <div class="analyzing-status">
+                <div class="analyzing-spinner"></div>
+                <span>Processing</span>
+              </div>
+            `;
+          } else {
+            mealItem.innerHTML = `
+              ${createImageElement(meal.image, 'meal-image', meal.name)}
+              <div class="meal-info">
+                <div class="meal-name">${meal.name}</div>
+                <div class="meal-nutrition">${meal.calories} kkal${meal.description ? ' - ' + meal.description : ''}</div>
+              </div>
+              <div class="meal-status">${meal.completed ? '<i class="fas fa-check"></i> Selesai' : ''}</div>
+              <div class="meal-actions">
+                <button class="meal-action-btn delete-meal-btn" data-meal-id="${meal.id}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            `;
 
-          // Only add event listeners for non-analyzing meals
-          mealItem.addEventListener('click', (e) => {
-            if (!e.target.closest('.delete-meal-btn')) {
-              this.openExerciseModal(meal);
-            }
-          });
-
-          const deleteBtn = mealItem.querySelector('.delete-meal-btn');
-          if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              this.handleDeleteMeal(meal.id);
+            // Event listeners
+            mealItem.addEventListener('click', (e) => {
+              if (!e.target.closest('.delete-meal-btn')) {
+                this.openExerciseModal(meal);
+              }
             });
-          }
-        }
 
-        mealList.appendChild(mealItem);
-      });
+            const deleteBtn = mealItem.querySelector('.delete-meal-btn');
+            if (deleteBtn) {
+              deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleDeleteMeal(meal.id);
+              });
+            }
+          }
+
+          mealList.appendChild(mealItem);
+        });
+      }
+    } else {
+      if (noMeals) noMeals.style.display = 'block';
+      if (mealSuggestion) mealSuggestion.style.display = 'block';
+      if (mealList) mealList.innerHTML = '';
     }
-  } else {
-    if (noMeals) noMeals.style.display = 'block';
-    if (mealSuggestion) mealSuggestion.style.display = 'block';
-    if (mealList) mealList.innerHTML = '';
   }
-}
 
   updateCaloriesDisplay(totalBurned) {
     const targetCalories = this.presenter.getTargetCalories();

@@ -428,4 +428,180 @@ export async function getAvailableExercises() {
   }
 }
 
+export async function saveWorkoutSession(sessionData) {
+  try {
+    const response = await apiClient.post('/workout-sessions', sessionData);
+
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Workout session berhasil disimpan'
+    };
+  } catch (error) {
+    console.error('Save workout session error:', error);
+    
+    let errorMessage = 'Gagal menyimpan workout session';
+    let statusCode = null;
+
+    if (error.response) {
+      statusCode = error.response.status;
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+      statusCode: statusCode
+    };
+  }
+}
+
+// Get workout sessions
+export async function getWorkoutSessions(params = {}) {
+  try {
+    const queryParams = new URLSearchParams(params).toString();
+    const url = `/workout-sessions${queryParams ? '?' + queryParams : ''}`;
+    
+    const response = await apiClient.get(url);
+
+    return {
+      success: true,
+      data: response.data.data,
+      pagination: response.data.pagination,
+      statistics: response.data.statistics,
+      message: 'Data workout sessions berhasil diambil'
+    };
+  } catch (error) {
+    console.error('Get workout sessions error:', error);
+    
+    let errorMessage = 'Gagal mengambil data workout sessions';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    } else if (error.request) {
+      errorMessage = 'Tidak dapat terhubung ke server';
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Get workout session by ID
+export async function getWorkoutSessionById(id) {
+  try {
+    const response = await apiClient.get(`/workout-sessions/${id}`);
+
+    return {
+      success: true,
+      data: response.data.data,
+      message: 'Data workout session berhasil diambil'
+    };
+  } catch (error) {
+    console.error('Get workout session by ID error:', error);
+    
+    let errorMessage = 'Gagal mengambil data workout session';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Update workout session
+export async function updateWorkoutSession(id, updateData) {
+  try {
+    const response = await apiClient.put(`/workout-sessions/${id}`, updateData);
+
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message || 'Workout session berhasil diupdate'
+    };
+  } catch (error) {
+    console.error('Update workout session error:', error);
+    
+    let errorMessage = 'Gagal mengupdate workout session';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Delete workout session
+export async function deleteWorkoutSession(id) {
+  try {
+    const response = await apiClient.delete(`/workout-sessions/${id}`);
+
+    return {
+      success: true,
+      message: response.data.message || 'Workout session berhasil dihapus'
+    };
+  } catch (error) {
+    console.error('Delete workout session error:', error);
+    
+    let errorMessage = 'Gagal menghapus workout session';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
+// Get workout statistics
+export async function getWorkoutStatistics(params = {}) {
+  try {
+    const queryParams = new URLSearchParams(params).toString();
+    const url = `/workout-sessions/statistics${queryParams ? '?' + queryParams : ''}`;
+    
+    const response = await apiClient.get(url);
+
+    return {
+      success: true,
+      data: response.data.data,
+      summary: response.data.summary,
+      message: 'Statistik workout berhasil diambil'
+    };
+  } catch (error) {
+    console.error('Get workout statistics error:', error);
+    
+    let errorMessage = 'Gagal mengambil statistik workout';
+
+    if (error.response) {
+      const serverMessage = error.response.data?.error;
+      errorMessage = serverMessage || errorMessage;
+    }
+
+    return {
+      success: false,
+      message: errorMessage
+    };
+  }
+}
+
 export { apiClient };

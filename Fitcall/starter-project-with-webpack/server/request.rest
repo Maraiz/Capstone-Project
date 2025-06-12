@@ -76,7 +76,7 @@ Content-Type: image/jpeg
 ### 8. Calculate Workout Calories (Protected)
 POST {{baseUrl}}/calculate-workout
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTQ5NjkxNywiZXhwIjoxNzQ5NDk3ODE3fQ.frG9yCAl1HY3SXy8KqLcYWkkTTiDo46BJa65K8SE7wU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsIm5hbWUiOiJNYXVsYW5hIEFrYmFyIiwiZW1haWwiOiJtYXVsYW5hMTIzQGdtYWlsLmNvbSIsImlhdCI6MTc0OTUzOTAzNSwiZXhwIjoxNzQ5NTQyNjM1fQ.4BgNLrZX8a40JfBwYYW0jCd18OHAa4z3A5aZlQxeljw
 
 {
     "gerakan": "push_up",
