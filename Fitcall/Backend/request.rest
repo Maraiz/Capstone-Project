@@ -11,7 +11,7 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    "name": "Maulana Akbar",
+    "name": "Maulana",
     "country": "indonesia", 
     "gender": "male",
     "age": 25,
@@ -21,10 +21,10 @@ Content-Type: application/json
     "weeklyTarget": 0.5,
     "targetDeadline": "2024-12-31",
     "activityLevel": 1.55,
-    "username": "maulana12345",
-    "email": "maulana123@gmail.com", 
-    "password": "123456789",
-    "confirmPassword": "123456789"
+    "username": "maulana",
+    "email": "maulana@gmail.com", 
+    "password": "12345678",
+    "confirmPassword": "12345678"
 }
 
 ### 2. Login
