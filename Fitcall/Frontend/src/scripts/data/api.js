@@ -430,22 +430,46 @@ export async function getAvailableExercises() {
 
 export async function saveWorkoutSession(sessionData) {
   try {
+    console.log('🟡 Saving workout session:', sessionData); // Debug log
+    
     const response = await apiClient.post('/workout-sessions', sessionData);
+    
+    // **DEBUG: Log backend response**
+    console.log('🔍 Save response:', response.data);
+    console.log('🔍 Save status:', response.data.status);
+    console.log('🔍 Save data:', response.data.data);
 
-    return {
-      success: true,
-      data: response.data.data,
-      message: response.data.message || 'Workout session berhasil disimpan'
-    };
+    // **FIX: Handle correct backend response format**
+    const backendData = response.data;
+    const isSuccess = backendData.status === 'success' || response.status === 201;
+    
+    if (isSuccess && backendData.data) {
+      console.log('🟢 Save success - session ID:', backendData.data.id);
+      
+      return {
+        success: true,
+        data: backendData.data,               // ← Use direct data, not nested
+        message: backendData.message || 'Workout session berhasil disimpan'
+      };
+    } else {
+      console.log('🔴 Save failed - no data in response');
+      
+      return {
+        success: false,
+        message: 'Gagal menyimpan - response tidak valid'
+      };
+    }
+    
   } catch (error) {
-    console.error('Save workout session error:', error);
+    console.error('🔴 Save workout session error:', error);
+    console.error('🔴 Save error response:', error.response?.data);
     
     let errorMessage = 'Gagal menyimpan workout session';
     let statusCode = null;
 
     if (error.response) {
       statusCode = error.response.status;
-      const serverMessage = error.response.data?.error;
+      const serverMessage = error.response.data?.error || error.response.data?.message;
       errorMessage = serverMessage || errorMessage;
     } else if (error.request) {
       errorMessage = 'Tidak dapat terhubung ke server';
@@ -465,29 +489,63 @@ export async function getWorkoutSessions(params = {}) {
     const queryParams = new URLSearchParams(params).toString();
     const url = `/workout-sessions${queryParams ? '?' + queryParams : ''}`;
     
+    console.log('🟡 API Call:', url); // Debug log
+    
     const response = await apiClient.get(url);
+    
+    // **DEBUG: Log full backend response**
+    console.log('🔍 Backend response:', response.data);
+    console.log('🔍 Response status:', response.data.status);
+    console.log('🔍 Response data:', response.data.data);
+    console.log('🔍 Data length:', response.data.data?.length);
 
-    return {
-      success: true,
-      data: response.data.data,
-      pagination: response.data.pagination,
-      statistics: response.data.statistics,
-      message: 'Data workout sessions berhasil diambil'
-    };
+    // **FIX: Handle both backend response formats**
+    const backendData = response.data;
+    
+    // Check if backend return success format
+    const isSuccess = backendData.status === 'success' || response.status === 200;
+    const workoutData = backendData.data || backendData; // Fallback if data is direct array
+    
+    if (isSuccess && Array.isArray(workoutData)) {
+      console.log('🟢 API success - returning data:', workoutData.length, 'sessions');
+      
+      return {
+        success: true,
+        data: workoutData,                    // ← Use direct data
+        pagination: backendData.pagination,   
+        statistics: backendData.statistics,
+        message: 'Data workout sessions berhasil diambil'
+      };
+    } else {
+      console.log('🔴 API failed - no data or wrong format');
+      console.log('🔍 Backend data type:', typeof workoutData);
+      console.log('🔍 Is array:', Array.isArray(workoutData));
+      
+      return {
+        success: false,
+        data: [],
+        message: 'Data tidak ditemukan atau format response salah'
+      };
+    }
+    
   } catch (error) {
-    console.error('Get workout sessions error:', error);
+    console.error('🔴 Get workout sessions error:', error);
+    console.error('🔴 Error response:', error.response?.data);
     
     let errorMessage = 'Gagal mengambil data workout sessions';
 
     if (error.response) {
-      const serverMessage = error.response.data?.error;
+      const serverMessage = error.response.data?.error || error.response.data?.message;
       errorMessage = serverMessage || errorMessage;
+      
+      console.log('🔴 Server error message:', serverMessage);
     } else if (error.request) {
       errorMessage = 'Tidak dapat terhubung ke server';
     }
 
     return {
       success: false,
+      data: [],
       message: errorMessage
     };
   }
@@ -521,22 +579,43 @@ export async function getWorkoutSessionById(id) {
 }
 
 // Update workout session
+// REPLACE updateWorkoutSession function di api.js:
+
+// Update workout session - FIXED VERSION
 export async function updateWorkoutSession(id, updateData) {
   try {
+    console.log('🟡 Updating workout session:', id, updateData); // Debug log
+    
     const response = await apiClient.put(`/workout-sessions/${id}`, updateData);
+    
+    console.log('🔍 Update response:', response.data); // Debug log
 
-    return {
-      success: true,
-      data: response.data.data,
-      message: response.data.message || 'Workout session berhasil diupdate'
-    };
+    // **FIX: Handle correct backend response format**
+    const backendData = response.data;
+    const isSuccess = backendData.status === 'success' || response.status === 200;
+    
+    if (isSuccess && backendData.data) {
+      console.log('🟢 Update success');
+      
+      return {
+        success: true,
+        data: backendData.data,               // ← Use direct data
+        message: backendData.message || 'Workout session berhasil diupdate'
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Update gagal - response tidak valid'
+      };
+    }
+    
   } catch (error) {
-    console.error('Update workout session error:', error);
+    console.error('🔴 Update workout session error:', error);
     
     let errorMessage = 'Gagal mengupdate workout session';
 
     if (error.response) {
-      const serverMessage = error.response.data?.error;
+      const serverMessage = error.response.data?.error || error.response.data?.message;
       errorMessage = serverMessage || errorMessage;
     }
 
@@ -547,22 +626,42 @@ export async function updateWorkoutSession(id, updateData) {
   }
 }
 
-// Delete workout session
+// REPLACE deleteWorkoutSession function di api.js:
+
+// Delete workout session - FIXED VERSION
 export async function deleteWorkoutSession(id) {
   try {
+    console.log('🟡 Deleting workout session:', id); // Debug log
+    
     const response = await apiClient.delete(`/workout-sessions/${id}`);
+    
+    console.log('🔍 Delete response:', response.data); // Debug log
 
-    return {
-      success: true,
-      message: response.data.message || 'Workout session berhasil dihapus'
-    };
+    // **FIX: Handle correct backend response format**
+    const backendData = response.data;
+    const isSuccess = backendData.status === 'success' || response.status === 200;
+    
+    if (isSuccess) {
+      console.log('🟢 Delete success');
+      
+      return {
+        success: true,
+        message: backendData.message || 'Workout session berhasil dihapus'
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Delete gagal - response tidak valid'
+      };
+    }
+    
   } catch (error) {
-    console.error('Delete workout session error:', error);
+    console.error('🔴 Delete workout session error:', error);
     
     let errorMessage = 'Gagal menghapus workout session';
 
     if (error.response) {
-      const serverMessage = error.response.data?.error;
+      const serverMessage = error.response.data?.error || error.response.data?.message;
       errorMessage = serverMessage || errorMessage;
     }
 

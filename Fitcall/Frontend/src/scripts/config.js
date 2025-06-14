@@ -1,5 +1,4 @@
 const CONFIG = {
-  BASE_URL: 'http://localhost:5000',
+  BASE_URL: 'https://api-fitcalori.my.id',
 };
-
 export default CONFIG;
