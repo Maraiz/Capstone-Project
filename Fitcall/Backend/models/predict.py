@@ -1,95 +1,160 @@
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import sys
 import json
 import numpy as np
-from tensorflow import keras
 from PIL import Image
+import os
+import time
 
-# Load model
-model_path = os.path.join(os.path.dirname(__file__), 'my_model.keras')
-model = keras.models.load_model(model_path)
+# Suppress TensorFlow warnings yang bisa ganggu output
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# Load class names
-class_names_path = os.path.join(os.path.dirname(__file__), 'class_names.json')
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+
+def send_response(data):
+    """Helper function untuk kirim response dengan proper flushing"""
+    print(json.dumps(data))
+    sys.stdout.flush()
+
+def send_error(error_message):
+    """Helper function untuk kirim error response"""
+    result = {"status": "error", "error": str(error_message)}
+    send_response(result)
+
 try:
-    with open(class_names_path, 'r') as f:
-        class_names = json.load(f)
-        
-    # Jika berupa array
-    if isinstance(class_names, list):
-        class_mapping = {str(i): name for i, name in enumerate(class_names)}
-    else:
-        class_mapping = class_names
-except:
-    # Fallback jika file tidak ada
-    class_mapping = {str(i): f"class_{i}" for i in range(22)}
+    # Load model .tflite
+    model_path = os.path.join(os.path.dirname(__file__), 'model.tflite')
+    
+    if not os.path.exists(model_path):
+        send_error(f"Model file not found: {model_path}")
+        sys.exit(1)
+    
+    interpreter = tf.lite.Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+
+    # Ambil info input/output
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Load class names
+    class_names_path = os.path.join(os.path.dirname(__file__), 'class_names.json')
+    try:
+        with open(class_names_path, 'r') as f:
+            class_names = json.load(f)
+        if isinstance(class_names, list):
+            class_mapping = {str(i): name for i, name in enumerate(class_names)}
+        else:
+            class_mapping = class_names
+    except Exception as e:
+        # Fallback ke default class names
+        class_mapping = {str(i): f"class_{i}" for i in range(22)}
+
+except Exception as e:
+    send_error(f"Error loading model: {str(e)}")
+    sys.exit(1)
 
 if __name__ == "__main__":
     try:
-        if len(sys.argv) > 2 and sys.argv[1] == "image":
-            # Handle image prediction
-            image_path = sys.argv[2]
-            expected_shape = model.input_shape
+        # Cek arguments
+        if len(sys.argv) < 3:
+            send_error("Usage: python predict.py image <image_path>")
+            sys.exit(1)
             
-            if len(expected_shape) == 4:
-                height, width, channels = expected_shape[1], expected_shape[2], expected_shape[3]
-                
-                # Load and preprocess image
-                image = Image.open(image_path)
-                if channels == 1:
-                    image = image.convert('L')
-                else:
-                    image = image.convert('RGB')
-                
-                image = image.resize((width, height))
-                input_data = np.array(image).reshape(1, height, width, channels).astype(np.float32)
-                input_data = input_data / 255.0
-            else:
-                raise ValueError("Model is not an image model")
-        else:
-            # Handle tabular prediction
-            features = json.loads(sys.argv[1])
-            expected_shape = model.input_shape
+        if sys.argv[1] != "image":
+            send_error("First argument must be 'image'")
+            sys.exit(1)
             
-            if len(expected_shape) == 4:
-                height, width, channels = expected_shape[1], expected_shape[2], expected_shape[3]
-                input_data = np.random.random((1, height, width, channels)).astype(np.float32)
+        image_path = sys.argv[2]
+
+        # Validasi file exists
+        if not os.path.exists(image_path):
+            send_error(f"Image file not found: {image_path}")
+            sys.exit(1)
+
+        # Info ukuran input model
+        input_shape = input_details[0]['shape']
+        height, width = input_shape[1], input_shape[2]
+        channels = input_shape[3] if len(input_shape) > 3 else 3
+
+        # Load dan preprocessing gambar
+        try:
+            image = Image.open(image_path)
+            
+            # Convert sesuai kebutuhan channels
+            if channels == 1:
+                image = image.convert('L')
             else:
-                input_data = np.array(features).reshape(1, -1).astype(np.float32)
-        
-        # Make prediction
-        prediction = model.predict(input_data, verbose=0)[0]
-        
-        # Get predicted class
-        predicted_class_idx = np.argmax(prediction)
-        predicted_prob = prediction[predicted_class_idx]
-        predicted_label = class_mapping.get(str(predicted_class_idx), f"class_{predicted_class_idx}")
-        
-        # Get top 3 predictions
-        top_3_indices = np.argsort(prediction)[-3:][::-1]
-        top_3_predictions = []
-        for idx in top_3_indices:
-            top_3_predictions.append({
-                "class": class_mapping.get(str(idx), f"class_{idx}"),
-                "confidence": float(prediction[idx])
-            })
-        
-        result = {
-            "predicted_class": predicted_label,
-            "confidence": float(predicted_prob),
-            "top_3_predictions": top_3_predictions,
-            "status": "success",
-            "model_type": "image" if len(model.input_shape) == 4 else "tabular"
-        }
-        print(json.dumps(result))
-        
+                image = image.convert('RGB')
+                
+            # Resize image
+            image = image.resize((width, height), Image.Resampling.LANCZOS)
+            
+            # Convert ke numpy array dan normalize
+            input_data = np.array(image).astype(np.float32)
+            
+            # Reshape sesuai input model
+            if channels == 1:
+                input_data = input_data.reshape(1, height, width, 1)
+            else:
+                input_data = input_data.reshape(1, height, width, channels)
+            
+            # Normalize ke [0,1]
+            input_data = input_data / 255.0
+            
+        except Exception as e:
+            send_error(f"Error processing image: {str(e)}")
+            sys.exit(1)
+
+        # Inference
+        try:
+            interpreter.set_tensor(input_details[0]['index'], input_data)
+            interpreter.invoke()
+            output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+            
+        except Exception as e:
+            send_error(f"Error during inference: {str(e)}")
+            sys.exit(1)
+
+        # Post-processing results
+        try:
+            predicted_class_idx = int(np.argmax(output_data))
+            predicted_prob = float(output_data[predicted_class_idx])
+            predicted_label = class_mapping.get(str(predicted_class_idx), f"class_{predicted_class_idx}")
+
+            # Top 3 predictions
+            top_3_indices = np.argsort(output_data)[-3:][::-1]
+            top_3_predictions = []
+            
+            for idx in top_3_indices:
+                class_name = class_mapping.get(str(idx), f"class_{idx}")
+                confidence = float(output_data[idx])
+                top_3_predictions.append({
+                    "class": class_name,
+                    "confidence": confidence
+                })
+
+            # Prepare final result
+            result = {
+                "predicted_class": predicted_label,
+                "confidence": predicted_prob,
+                "top_3_predictions": top_3_predictions,
+                "status": "success",
+                "model_type": "tflite",
+                "input_shape": input_shape.tolist(),
+                "total_classes": len(class_mapping)
+            }
+            
+            send_response(result)
+            
+        except Exception as e:
+            send_error(f"Error processing results: {str(e)}")
+            sys.exit(1)
+            
     except Exception as e:
-        error_result = {
-            "error": str(e),
-            "status": "error"
-        }
-        print(json.dumps(error_result))
+        send_error(f"Unexpected error: {str(e)}")
         sys.exit(1)
+    
+    # Small delay before exit to ensure all output is flushed
+    time.sleep(0.1)
+    sys.exit(0)

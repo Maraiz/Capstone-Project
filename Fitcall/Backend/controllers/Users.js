@@ -1,8 +1,6 @@
-import Users from '../models/userModel.js';
+import { Users } from '../models/userModel.js';
 import bcrypt from 'bcrypt';
-import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
-
 
 export const getUsers = async (req, res) => {
     try {
@@ -16,23 +14,32 @@ export const getUsers = async (req, res) => {
         }
         
         // ✅ Return data user yang sedang login saja
-        const user = await Users.findOne({
-            where: { id: userId },
-            attributes: [
-                'id', 'name', 'email', 'username', 
-                'targetCalories', 'currentWeight', 'targetWeight',
-                'weeklyTarget', 'height', 'age', 'gender', 
-                'activityLevel', 'country'
-            ]
-        });
+        const user = await Users.findByPk(userId);
         
         if (!user) {
             console.log('User not found for ID:', userId);
             return res.status(404).json({ msg: "User tidak ditemukan" });
         }
         
+        // Filter fields yang ingin dikembalikan
+        const userData = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            targetCalories: user.targetCalories,
+            currentWeight: user.currentWeight,
+            targetWeight: user.targetWeight,
+            weeklyTarget: user.weeklyTarget,
+            height: user.height,
+            age: user.age,
+            gender: user.gender,
+            activityLevel: user.activityLevel,
+            country: user.country
+        };
+        
         console.log('User found:', user.name);
-        res.json(user); // Return single object
+        res.json(userData); // Return single object
         
     } catch (error) {
         console.error('Error fetching user:', error);
@@ -86,21 +93,19 @@ export const Register = async (req, res) => {
     }
     
     try {
-        // Check existing email & username
-        const existingUser = await Users.findOne({
-            where: {
-                [Op.or]: [
-                    { email: email },
-                    { username: username }
-                ]
-            }
-        });
-        
-        if (existingUser) {
+        // Check existing email
+        const existingEmail = await Users.findByEmail(email);
+        if (existingEmail) {
             return res.status(400).json({
-                msg: existingUser.email === email ? 
-                     "Email sudah terdaftar" : 
-                     "Username sudah digunakan"
+                msg: "Email sudah terdaftar"
+            });
+        }
+        
+        // Check existing username
+        const existingUsername = await Users.findByUsername(username);
+        if (existingUsername) {
+            return res.status(400).json({
+                msg: "Username sudah digunakan"
             });
         }
         
@@ -148,7 +153,7 @@ export const Register = async (req, res) => {
         });
         
         // Return success (exclude password)
-        const { password: _, ...userWithoutPassword } = newUser.toJSON();
+        const { password: _, refreshToken: __, ...userWithoutPassword } = newUser;
         
         res.status(201).json({
             msg: "Register Berhasil",
@@ -158,12 +163,37 @@ export const Register = async (req, res) => {
     } catch (error) {
         console.error('Registration error:', error);
         
-        if (error.name === 'SequelizeValidationError') {
+        // Handle Supabase validation errors
+        if (error.errors && Array.isArray(error.errors)) {
             return res.status(400).json({
                 msg: "Data tidak valid",
                 errors: error.errors.map(e => ({
-                    field: e.path,
-                    message: e.message
+                    field: 'unknown',
+                    message: e
+                }))
+            });
+        }
+        
+        // Handle specific Supabase errors
+        if (error.message.includes('Email already exists')) {
+            return res.status(400).json({
+                msg: "Email sudah terdaftar"
+            });
+        }
+        
+        if (error.message.includes('Username already exists')) {
+            return res.status(400).json({
+                msg: "Username sudah digunakan"
+            });
+        }
+        
+        // Handle validation error from our model
+        if (error.message === 'Validation error' && error.errors) {
+            return res.status(400).json({
+                msg: "Data tidak valid",
+                errors: error.errors.map(e => ({
+                    field: 'validation',
+                    message: e
                 }))
             });
         }
@@ -207,9 +237,7 @@ export const Login = async (req, res) => {
     }
     
     try {
-        const user = await Users.findOne({
-            where: { email: email }
-        });
+        const user = await Users.findByEmail(email);
         
         if (!user) {
             return res.status(404).json({msg: "Email tidak ditemukan"});
@@ -235,10 +263,8 @@ export const Login = async (req, res) => {
             { expiresIn: '1d' }
         );
         
-        await Users.update(
-            { refresh_token: refreshToken }, 
-            { where: { id: userId } }
-        );
+        // Update refresh token
+        await Users.updateRefreshToken(userId, refreshToken);
         
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
@@ -266,24 +292,15 @@ export const Logout = async (req, res) => {
     if (!refreshToken) return res.sendStatus(204); // No Content
     
     try {
-        // ✅ Fix 1: Gunakan Users dan findOne()
+        // Find user by refresh token
         const user = await Users.findOne({
-            where: {
-                refresh_token: refreshToken
-            }
+            where: { refreshToken: refreshToken }
         });
         
-        // ✅ Fix 2: Cek user dengan benar
         if (!user) return res.sendStatus(204);
         
-        // ✅ Fix 3: Langsung akses user.id (tanpa [0])
-        const userId = user.id;
-        
-        // ✅ Fix 4: Gunakan Users konsisten
-        await Users.update(
-            { refresh_token: null }, 
-            { where: { id: userId } }
-        );
+        // Clear refresh token
+        await Users.updateRefreshToken(user.id, null);
         
         res.clearCookie('refreshToken');
         res.json({ msg: "Logout berhasil" });

@@ -1,7 +1,6 @@
-import WorkoutSessions from '../models/WorkoutSessionModel.js';
-import Users from '../models/userModel.js';
+// WorkoutSessions.js - SUPABASE VERSION (Final)
+import { supabase } from '../config/Database.js';
 import jwt from 'jsonwebtoken';
-import { Op } from 'sequelize';
 
 // Helper function untuk mendapatkan user dari token
 const getUserFromToken = async (req) => {
@@ -13,21 +12,29 @@ const getUserFromToken = async (req) => {
   const token = authHeader.split(' ')[1];
   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
   
-  const user = await Users.findOne({
-    where: { id: decoded.userId }
-  });
+  console.log('🟡 Token verified for user:', decoded.userId);
   
-  if (!user) {
+  // Query user dengan Supabase
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', decoded.userId)
+    .single();
+  
+  if (error || !user) {
+    console.error('🔴 User query error:', error);
     throw new Error('User tidak ditemukan');
   }
   
+  console.log('🟢 User found:', user.name);
   return user;
 };
 
-// Simpan workout session
+// Simpan workout session - SUPABASE VERSION
 export const saveWorkoutSession = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
+    console.log('🟡 Saving workout session for user:', user.id);
     
     const {
       exerciseName,
@@ -56,28 +63,69 @@ export const saveWorkoutSession = async (req, res) => {
       });
     }
 
-    // Buat workout session baru
-    const workoutSession = await WorkoutSessions.create({
-      userId: user.id,
-      exerciseName,
-      predictedExercise: predictedExercise || exerciseName,
-      duration,
-      caloriesBurned,
-      bmr,
-      exerciseImage,
-      workoutDate: workoutDate || new Date().toISOString().split('T')[0],
-      workoutTime: new Date().toTimeString().split(' ')[0],
+    // Data untuk insert - GUNAKAN SNAKE_CASE untuk Supabase
+    const insertData = {
+      user_id: user.id,
+      exercise_name: exerciseName,
+      predicted_exercise: predictedExercise || exerciseName,
+      duration: duration,
+      calories_burned: caloriesBurned,
+      bmr: bmr,
+      exercise_image: exerciseImage,
+      workout_date: workoutDate || new Date().toISOString().split('T')[0],
+      workout_time: new Date().toTimeString().split(' ')[0],
       status: status || 'saved',
-      notes,
+      notes: notes,
       // Metadata user saat workout
-      userWeight: user.currentWeight,
-      userHeight: user.height,
-      userAge: user.age,
-      userGender: user.gender
-    });
+      user_weight: user.current_weight || user.currentWeight,
+      user_height: user.height,
+      user_age: user.age,
+      user_gender: user.gender
+    };
+
+    console.log('🟡 Insert data:', insertData);
+
+    // Insert dengan Supabase
+    const { data: workoutSession, error } = await supabase
+      .from('workout_sessions')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('🔴 Supabase insert error:', error);
+      return res.status(500).json({
+        error: 'Gagal menyimpan workout session: ' + error.message,
+        status: 'error'
+      });
+    }
+
+    console.log('🟢 Insert successful:', workoutSession.id);
+
+    // Convert response ke camelCase untuk frontend
+    const responseData = {
+      id: workoutSession.id,
+      userId: workoutSession.user_id,
+      exerciseName: workoutSession.exercise_name,
+      predictedExercise: workoutSession.predicted_exercise,
+      duration: workoutSession.duration,
+      caloriesBurned: workoutSession.calories_burned,
+      bmr: workoutSession.bmr,
+      exerciseImage: workoutSession.exercise_image,
+      workoutDate: workoutSession.workout_date,
+      workoutTime: workoutSession.workout_time,
+      status: workoutSession.status,
+      notes: workoutSession.notes,
+      userWeight: workoutSession.user_weight,
+      userHeight: workoutSession.user_height,
+      userAge: workoutSession.user_age,
+      userGender: workoutSession.user_gender,
+      createdAt: workoutSession.created_at,
+      updatedAt: workoutSession.updated_at
+    };
 
     res.status(201).json({
-      data: workoutSession,
+      data: responseData,
       status: 'success',
       message: 'Workout session berhasil disimpan'
     });
@@ -90,7 +138,7 @@ export const saveWorkoutSession = async (req, res) => {
       });
     }
     
-    console.error('Save workout session error:', error);
+    console.error('🔴 Save workout session error:', error);
     res.status(500).json({
       error: 'Terjadi kesalahan server: ' + error.message,
       status: 'error'
@@ -98,10 +146,11 @@ export const saveWorkoutSession = async (req, res) => {
   }
 };
 
-// Ambil workout sessions user
+// Ambil workout sessions user - SUPABASE VERSION
 export const getWorkoutSessions = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
+    console.log('🟡 Getting workout sessions for user:', user.id);
     
     const { 
       date, 
@@ -113,61 +162,121 @@ export const getWorkoutSessions = async (req, res) => {
       limit = 50 
     } = req.query;
 
-    // Build where clause
-    const whereClause = { userId: user.id };
+    console.log('🟡 Query params:', { date, startDate, endDate, exercise, status, page, limit });
 
+    // GUNAKAN SNAKE_CASE untuk query
+    let query = supabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('user_id', user.id);  // UUID user
+
+    // Filters dengan snake_case
     if (date) {
-      whereClause.workoutDate = date;
+      query = query.eq('workout_date', date);
+      console.log('🟡 Added date filter:', date);
     }
 
     if (startDate && endDate) {
-      whereClause.workoutDate = {
-        [Op.between]: [startDate, endDate]
-      };
+      query = query
+        .gte('workout_date', startDate)
+        .lte('workout_date', endDate);
+      console.log('🟡 Added date range filter:', startDate, 'to', endDate);
     }
 
     if (exercise) {
-      whereClause[Op.or] = [
-        { exerciseName: { [Op.iLike]: `%${exercise}%` } },
-        { predictedExercise: { [Op.iLike]: `%${exercise}%` } }
-      ];
+      query = query.or(`exercise_name.ilike.%${exercise}%,predicted_exercise.ilike.%${exercise}%`);
+      console.log('🟡 Added exercise filter:', exercise);
     }
 
     if (status) {
-      whereClause.status = status;
+      query = query.eq('status', status);
+      console.log('🟡 Added status filter:', status);
     }
 
     // Pagination
     const offset = (page - 1) * limit;
+    query = query
+      .order('workout_date', { ascending: false })
+      .order('workout_time', { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
 
-    const { count, rows } = await WorkoutSessions.findAndCountAll({
-      where: whereClause,
-      order: [['workoutDate', 'DESC'], ['workoutTime', 'DESC']],
-      limit: parseInt(limit),
-      offset: offset,
-      include: [{
-        model: Users,
-        as: 'user',
-        attributes: ['name', 'email']
-      }]
-    });
+    console.log('🟡 Executing main query with pagination...');
+
+    // Execute query
+    const { data: rows, error } = await query;
+
+    if (error) {
+      console.error('🔴 Supabase query error:', error);
+      return res.status(500).json({
+        error: 'Gagal mengambil data: ' + error.message,
+        status: 'error'
+      });
+    }
+
+    console.log('🟢 Query successful, rows found:', rows ? rows.length : 0);
+
+    // Get total count dengan query terpisah
+    console.log('🟡 Getting total count...');
+    let countQuery = supabase
+      .from('workout_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (date) countQuery = countQuery.eq('workout_date', date);
+    if (startDate && endDate) {
+      countQuery = countQuery.gte('workout_date', startDate).lte('workout_date', endDate);
+    }
+    if (exercise) {
+      countQuery = countQuery.or(`exercise_name.ilike.%${exercise}%,predicted_exercise.ilike.%${exercise}%`);
+    }
+    if (status) countQuery = countQuery.eq('status', status);
+
+    const { count: totalCount, error: countError } = await countQuery;
+
+    if (countError) {
+      console.error('🔴 Count query error:', countError);
+    } else {
+      console.log('🟢 Total count:', totalCount);
+    }
+
+    // Convert snake_case response to camelCase untuk frontend
+    const convertedRows = rows ? rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      exerciseName: row.exercise_name,
+      predictedExercise: row.predicted_exercise,
+      duration: row.duration,
+      caloriesBurned: row.calories_burned,
+      bmr: row.bmr,
+      exerciseImage: row.exercise_image,
+      workoutDate: row.workout_date,
+      workoutTime: row.workout_time,
+      status: row.status,
+      notes: row.notes,
+      userWeight: row.user_weight,
+      userHeight: row.user_height,
+      userAge: row.user_age,
+      userGender: row.user_gender,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    })) : [];
 
     // Calculate statistics
-    const totalCalories = rows.reduce((sum, session) => sum + session.caloriesBurned, 0);
-    const totalDuration = rows.reduce((sum, session) => sum + session.duration, 0);
-    const uniqueExercises = [...new Set(rows.map(session => session.predictedExercise))];
+    const totalCalories = convertedRows.reduce((sum, session) => sum + (session.caloriesBurned || 0), 0);
+    const totalDuration = convertedRows.reduce((sum, session) => sum + (session.duration || 0), 0);
+    const uniqueExercises = [...new Set(convertedRows.map(session => session.predictedExercise || session.exerciseName))];
 
-    res.json({
-      data: rows,
+    const response = {
+      data: convertedRows,
       pagination: {
-        total: count,
+        total: totalCount || 0,
         page: parseInt(page),
-        totalPages: Math.ceil(count / limit),
-        hasNext: offset + rows.length < count,
+        totalPages: Math.ceil((totalCount || 0) / limit),
+        hasNext: offset + (convertedRows.length) < (totalCount || 0),
         hasPrev: page > 1
       },
       statistics: {
-        totalSessions: count,
+        totalSessions: totalCount || 0,
         totalCalories: parseFloat(totalCalories.toFixed(2)),
         totalDuration: totalDuration,
         totalDurationMinutes: Math.round(totalDuration / 60),
@@ -175,7 +284,15 @@ export const getWorkoutSessions = async (req, res) => {
         exerciseTypes: uniqueExercises
       },
       status: 'success'
+    };
+
+    console.log('🟢 Response prepared:', {
+      dataCount: response.data.length,
+      totalCount: response.pagination.total,
+      totalCalories: response.statistics.totalCalories
     });
+
+    res.json(response);
 
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -185,7 +302,7 @@ export const getWorkoutSessions = async (req, res) => {
       });
     }
     
-    console.error('Get workout sessions error:', error);
+    console.error('🔴 Get workout sessions error:', error);
     res.status(500).json({
       error: 'Terjadi kesalahan server: ' + error.message,
       status: 'error'
@@ -193,33 +310,50 @@ export const getWorkoutSessions = async (req, res) => {
   }
 };
 
-// Ambil workout session by ID
+// Ambil workout session by ID - SUPABASE VERSION
 export const getWorkoutSessionById = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
     const { id } = req.params;
 
-    const workoutSession = await WorkoutSessions.findOne({
-      where: { 
-        id: id,
-        userId: user.id 
-      },
-      include: [{
-        model: Users,
-        as: 'user',
-        attributes: ['name', 'email']
-      }]
-    });
+    const { data: workoutSession, error } = await supabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single();
 
-    if (!workoutSession) {
+    if (error || !workoutSession) {
       return res.status(404).json({
         error: 'Workout session tidak ditemukan',
         status: 'error'
       });
     }
 
+    // Convert to camelCase
+    const responseData = {
+      id: workoutSession.id,
+      userId: workoutSession.user_id,
+      exerciseName: workoutSession.exercise_name,
+      predictedExercise: workoutSession.predicted_exercise,
+      duration: workoutSession.duration,
+      caloriesBurned: workoutSession.calories_burned,
+      bmr: workoutSession.bmr,
+      exerciseImage: workoutSession.exercise_image,
+      workoutDate: workoutSession.workout_date,
+      workoutTime: workoutSession.workout_time,
+      status: workoutSession.status,
+      notes: workoutSession.notes,
+      userWeight: workoutSession.user_weight,
+      userHeight: workoutSession.user_height,
+      userAge: workoutSession.user_age,
+      userGender: workoutSession.user_gender,
+      createdAt: workoutSession.created_at,
+      updatedAt: workoutSession.updated_at
+    };
+
     res.json({
-      data: workoutSession,
+      data: responseData,
       status: 'success'
     });
 
@@ -239,7 +373,7 @@ export const getWorkoutSessionById = async (req, res) => {
   }
 };
 
-// Update workout session
+// Update workout session - SUPABASE VERSION
 export const updateWorkoutSession = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
@@ -253,32 +387,60 @@ export const updateWorkoutSession = async (req, res) => {
       notes
     } = req.body;
 
-    const workoutSession = await WorkoutSessions.findOne({
-      where: { 
-        id: id,
-        userId: user.id 
-      }
-    });
+    // Build update data dengan snake_case
+    const updateData = {};
+    if (exerciseName) updateData.exercise_name = exerciseName;
+    if (duration) updateData.duration = duration;
+    if (caloriesBurned !== undefined) updateData.calories_burned = caloriesBurned;
+    if (status) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes;
 
-    if (!workoutSession) {
-      return res.status(404).json({
-        error: 'Workout session tidak ditemukan',
+    const { data: workoutSession, error } = await supabase
+      .from('workout_sessions')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({
+          error: 'Workout session tidak ditemukan',
+          status: 'error'
+        });
+      }
+      
+      return res.status(500).json({
+        error: 'Gagal update: ' + error.message,
         status: 'error'
       });
     }
 
-    // Update fields
-    const updateData = {};
-    if (exerciseName) updateData.exerciseName = exerciseName;
-    if (duration) updateData.duration = duration;
-    if (caloriesBurned !== undefined) updateData.caloriesBurned = caloriesBurned;
-    if (status) updateData.status = status;
-    if (notes !== undefined) updateData.notes = notes;
-
-    await workoutSession.update(updateData);
+    // Convert to camelCase
+    const responseData = {
+      id: workoutSession.id,
+      userId: workoutSession.user_id,
+      exerciseName: workoutSession.exercise_name,
+      predictedExercise: workoutSession.predicted_exercise,
+      duration: workoutSession.duration,
+      caloriesBurned: workoutSession.calories_burned,
+      bmr: workoutSession.bmr,
+      exerciseImage: workoutSession.exercise_image,
+      workoutDate: workoutSession.workout_date,
+      workoutTime: workoutSession.workout_time,
+      status: workoutSession.status,
+      notes: workoutSession.notes,
+      userWeight: workoutSession.user_weight,
+      userHeight: workoutSession.user_height,
+      userAge: workoutSession.user_age,
+      userGender: workoutSession.user_gender,
+      createdAt: workoutSession.created_at,
+      updatedAt: workoutSession.updated_at
+    };
 
     res.json({
-      data: workoutSession,
+      data: responseData,
       status: 'success',
       message: 'Workout session berhasil diupdate'
     });
@@ -299,27 +461,24 @@ export const updateWorkoutSession = async (req, res) => {
   }
 };
 
-// Hapus workout session
+// Hapus workout session - SUPABASE VERSION
 export const deleteWorkoutSession = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
     const { id } = req.params;
 
-    const workoutSession = await WorkoutSessions.findOne({
-      where: { 
-        id: id,
-        userId: user.id 
-      }
-    });
+    const { error } = await supabase
+      .from('workout_sessions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
 
-    if (!workoutSession) {
-      return res.status(404).json({
-        error: 'Workout session tidak ditemukan',
+    if (error) {
+      return res.status(500).json({
+        error: 'Gagal hapus: ' + error.message,
         status: 'error'
       });
     }
-
-    await workoutSession.destroy();
 
     res.json({
       status: 'success',
@@ -342,35 +501,42 @@ export const deleteWorkoutSession = async (req, res) => {
   }
 };
 
-// Get workout statistics per tanggal
+// Get workout statistics - SUPABASE VERSION
 export const getWorkoutStatistics = async (req, res) => {
   try {
     const user = await getUserFromToken(req);
-    const { startDate, endDate, groupBy = 'day' } = req.query;
+    const { startDate, endDate } = req.query;
 
-    let dateFilter = { userId: user.id };
+    let query = supabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('user_id', user.id);
     
     if (startDate && endDate) {
-      dateFilter.workoutDate = {
-        [Op.between]: [startDate, endDate]
-      };
+      query = query
+        .gte('workout_date', startDate)
+        .lte('workout_date', endDate);
     } else {
       // Default: last 30 days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      dateFilter.workoutDate = {
-        [Op.gte]: thirtyDaysAgo.toISOString().split('T')[0]
-      };
+      query = query.gte('workout_date', thirtyDaysAgo.toISOString().split('T')[0]);
     }
 
-    const sessions = await WorkoutSessions.findAll({
-      where: dateFilter,
-      order: [['workoutDate', 'ASC']]
-    });
+    query = query.order('workout_date', { ascending: true });
+
+    const { data: sessions, error } = await query;
+
+    if (error) {
+      return res.status(500).json({
+        error: 'Gagal ambil statistik: ' + error.message,
+        status: 'error'
+      });
+    }
 
     // Group by date
     const groupedData = sessions.reduce((acc, session) => {
-      const date = session.workoutDate;
+      const date = session.workout_date;
       if (!acc[date]) {
         acc[date] = {
           date,
@@ -381,12 +547,12 @@ export const getWorkoutStatistics = async (req, res) => {
         };
       }
       
-      acc[date].totalCalories += session.caloriesBurned;
+      acc[date].totalCalories += session.calories_burned;
       acc[date].totalDuration += session.duration;
       acc[date].sessionCount += 1;
       acc[date].exercises.push({
-        name: session.predictedExercise,
-        calories: session.caloriesBurned,
+        name: session.predicted_exercise,
+        calories: session.calories_burned,
         duration: session.duration
       });
       

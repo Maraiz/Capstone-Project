@@ -11,7 +11,7 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    "name": "Maulana",
+    "name": "Maulana Akbar",
     "country": "indonesia", 
     "gender": "male",
     "age": 25,
@@ -21,10 +21,10 @@ Content-Type: application/json
     "weeklyTarget": 0.5,
     "targetDeadline": "2024-12-31",
     "activityLevel": 1.55,
-    "username": "maulana",
-    "email": "maulana@gmail.com", 
-    "password": "12345678",
-    "confirmPassword": "12345678"
+    "username": "maulana12345",
+    "email": "maulana123@gmail.com", 
+    "password": "123456789",
+    "confirmPassword": "123456789"
 }
 
 ### 2. Login
@@ -35,6 +35,10 @@ Content-Type: application/json
     "email": "maulana123@gmail.com",
     "password": "123456789"
 }
+
+### 2. Get All Workout Sessions (Tanpa Filter)
+GET {{baseUrl}}/workout-sessions
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4MWQzY2UzOS1jOTg3LTQzZTUtYmM0Yy0yMDhmOTM4NTNlZTUiLCJuYW1lIjoiTWF1bGFuYSBBa2JhciIsImVtYWlsIjoibWF1bGFuYTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NDk5MDM0OTMsImV4cCI6MTc0OTkwNDM5M30.d8LhGW6HdDelrtSzXhho2KbRavuPX7NN7fCQcT2ejPM
 
 ### 3. Get Users (Protected)
 GET {{baseUrl}}/users
